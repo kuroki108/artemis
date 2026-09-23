@@ -46,15 +46,16 @@ class Counting(commands.Cog):
     
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
         if message.channel.id != COUNTING_CHANNEL_ID:
+            return
+        if message.author.bot:
             return
 
         try:
             number = int(message.content.strip())
         except ValueError:
-            return  # Nicht numerische Nachrichten ignorieren.
+            await message.delete()
+            return
 
         expected = self.count + 1
 
