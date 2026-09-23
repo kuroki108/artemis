@@ -43,6 +43,7 @@ class Counting(commands.Cog):
             return f"{random.choice(self.counting_quote)}\n\n{message}"
         return message
 
+    
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
