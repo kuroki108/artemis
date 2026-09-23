@@ -62,7 +62,7 @@ class Counting(commands.Cog):
             await message.add_reaction("❌")
             reset_message = (
                 f"{message.author.mention}, du warst bereits dran. "
-                f"Zählung zurückgesetzt. Nächste Zahl: **1**"
+                f"Die Zählung wurde zurückgesetzt. Nächste Zahl: **1**"
             )
             await message.channel.send(self.counting_quote_func(reset_message))
             return
@@ -75,7 +75,7 @@ class Counting(commands.Cog):
             await message.add_reaction("❌")
             reset_message = (
                 f"Falsche Zahl! Erwartet wurde **{expected}**. "
-                f"Zählung zurückgesetzt. Nächste Zahl: **1**"
+                f"Die Zählung wurde zurückgesetzt. Nächste Zahl: **1**"
             )
             await message.channel.send(self.counting_quote_func(reset_message))
             return
