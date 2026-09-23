@@ -60,13 +60,11 @@ class Counting(commands.Cog):
             self.last_user_id = None
             await self._save_count()
             await message.add_reaction("❌")
-            await message.channel.send(
-                self.counting_quote_func(
-                    "Du kannst nicht zweimal hintereinander zählen! "
-                    "Zählung zurückgesetzt. Nächste Zahl: **1**"
-                )
+            reset_message = (
+                f"{message.author.mention}, du warst bereits dran. "
+                f"Zählung zurückgesetzt. Nächste Zahl: **1**"
             )
-            await message.channel.send(self.counting_quote_func("reset_message"))
+            await message.channel.send(self.counting_quote_func(reset_message))
             return
 
         # Falsche Zahl -> Reset
