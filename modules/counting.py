@@ -20,16 +20,19 @@ class Counting(commands.Cog):
         self.last_user_id = None
         self.counting_quote = []
         self._database_lock = asyncio.Lock()
+        self._load_counting_quotes()
 
-    async def cog_load(self) -> None:
-        database.initialize_database()
-        self.count = database.load_count()
-
+    def _load_counting_quotes(self) -> None:
         try:
             sayings = json.loads(COUNTING_QUOTES_FILE.read_text(encoding="utf-8"))
             self.counting_quote = sayings.get("falsche_zahl", []) if isinstance(sayings, dict) else []
         except (FileNotFoundError, json.JSONDecodeError):
             self.counting_quote = []
+
+    async def cog_load(self) -> None:
+        database.initialize_database()
+        self.count = database.load_count()
+        self._load_counting_quotes()
 
     async def _save_count(self) -> None:
         async with self._database_lock:
