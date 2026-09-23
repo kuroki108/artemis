@@ -10,7 +10,7 @@ from config import ADMIN_ROLES, COUNTING_CHANNEL_ID
 import database
 
 
-FUNNY_SAYINGS_FILE = Path(__file__).resolve().parent.parent / "data" / "quote.json"
+COUNTING_QUOTES_FILE = Path(__file__).resolve().parent.parent / "data" / "counting_quotes.json"
 
 
 class Counting(commands.Cog):
@@ -18,7 +18,7 @@ class Counting(commands.Cog):
         self.bot = bot
         self.count = 0
         self.last_user_id = None
-        self.funny_sayings = []
+        self.counting_quote = []
         self._database_lock = asyncio.Lock()
 
     async def cog_load(self) -> None:
@@ -26,14 +26,19 @@ class Counting(commands.Cog):
         self.count = database.load_count()
 
         try:
-            sayings = json.loads(FUNNY_SAYINGS_FILE.read_text(encoding="utf-8"))
-            self.funny_sayings = sayings.get("falsche_zahl", []) if isinstance(sayings, dict) else []
+            sayings = json.loads(COUNTING_QUOTES_FILE.read_text(encoding="utf-8"))
+            self.counting_quote = sayings.get("falsche_zahl", []) if isinstance(sayings, dict) else []
         except (FileNotFoundError, json.JSONDecodeError):
-            self.funny_sayings = []
+            self.counting_quote = []
 
     async def _save_count(self) -> None:
         async with self._database_lock:
             database.save_count(self.count)
+
+    def counting_quote_func(self, message: str) -> str:
+        if self.counting_quote:
+            return f"{random.choice(self.counting_quote)}\n\n{message}"
+        return message
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -45,7 +50,7 @@ class Counting(commands.Cog):
         try:
             number = int(message.content.strip())
         except ValueError:
-            return  # keine Zahl -> ignorieren, kein Reset
+            return  # Nicht numerische Nachrichten ignorieren.
 
         expected = self.count + 1
 
@@ -54,11 +59,14 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("<:check:1552391189431324804>")
+            await message.add_reaction("❌")
             await message.channel.send(
-                f"{message.author.mention}, du warst bereits dran. "
-                f"Zaehlung zurueckgesetzt. Naechste Zahl: **1**"
+                self.counting_quote_func(
+                    "Du kannst nicht zweimal hintereinander zählen! "
+                    "Zählung zurückgesetzt. Nächste Zahl: **1**"
+                )
             )
+            await message.channel.send(self.counting_quote_func("reset_message"))
             return
 
         # Falsche Zahl -> Reset
@@ -66,26 +74,24 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("<:check:1552391189431324804>")
+            await message.add_reaction("❌")
             reset_message = (
                 f"Falsche Zahl! Erwartet wurde **{expected}**. "
-                f"Zaehlung zurueckgesetzt. Naechste Zahl: **1**"
+                f"Zählung zurückgesetzt. Nächste Zahl: **1**"
             )
-            if self.funny_sayings:
-                reset_message = f"{random.choice(self.funny_sayings)}\n\n{reset_message}"
-            await message.channel.send(reset_message)
+            await message.channel.send(self.counting_quote_func(reset_message))
             return
 
         # Richtig
         self.count = number
         self.last_user_id = message.author.id
         await self._save_count()
-        await message.add_reaction("<:check:1552391189431324804>")
+        await message.add_reaction("✅")
 
     @commands.command(name="set")
     @commands.has_any_role(*ADMIN_ROLES)
     async def set_number(self, ctx: commands.Context, number: int):
-        """Setzt den aktuellen Zählerstand (die nächste erwartete Zahl ist number+1)."""
+        #Setzt den aktuellen Zählerstand (die nächste erwartete Zahl ist number+1).
         if number < 0:
             await ctx.send("Die Zahl darf nicht negativ sein.")
             return
