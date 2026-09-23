@@ -9,11 +9,14 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
+intents.guilds = True
 intents.message_content = True
+intents.members = True
 
 bot = commands.Bot(
     command_prefix="!",
-    intents=intents
+    intents=intents,
+    activity=discord.CustomActivity(name="⟣ 🪽 lunaR palace ₊ ⊹")
 )
 
 
