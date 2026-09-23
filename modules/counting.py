@@ -54,7 +54,7 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("<:lunaRpalace:1544143111335182446>")
+            await message.add_reaction("<:check:1552391189431324804>")
             await message.channel.send(
                 f"{message.author.mention}, du warst bereits dran. "
                 f"Zaehlung zurueckgesetzt. Naechste Zahl: **1**"
@@ -66,7 +66,7 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("<:lunaRpalace:1544143111335182446>")
+            await message.add_reaction("<:check:1552391189431324804>")
             reset_message = (
                 f"Falsche Zahl! Erwartet wurde **{expected}**. "
                 f"Zaehlung zurueckgesetzt. Naechste Zahl: **1**"
@@ -80,7 +80,7 @@ class Counting(commands.Cog):
         self.count = number
         self.last_user_id = message.author.id
         await self._save_count()
-        await message.add_reaction("<:lunaRpalace:1532899609351819344>")
+        await message.add_reaction("<:check:1552391189431324804>")
 
     @commands.command(name="set")
     @commands.has_any_role(*ADMIN_ROLES)
