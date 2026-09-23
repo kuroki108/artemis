@@ -2,7 +2,4 @@
 /env
 __pycache__/
 *.pyc
-/data/*
-!/data/quote.json
-!/data/master.db
 /.claude
