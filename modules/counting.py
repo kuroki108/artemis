@@ -6,7 +6,7 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
-from config import ADMIN_ROLES, COUNTING_CHANNEL_ID
+from config import ADMIN_ROLES, COUNTING_CHANNEL_ID, MATH_PRO_ROLE_ID
 import database
 
 
@@ -18,6 +18,7 @@ class Counting(commands.Cog):
         self.bot = bot
         self.count = 0
         self.last_user_id = None
+        self.math_pro_user_id = None
         self.counting_quote = []
         self._database_lock = asyncio.Lock()
         self._load_counting_quotes()
@@ -43,7 +44,25 @@ class Counting(commands.Cog):
             return f"{random.choice(self.counting_quote)}\n\n{message}"
         return message
 
-    
+    async def _handle_math_pro_role(self, guild: discord.Guild, user_id: int) -> None:
+        if MATH_PRO_ROLE_ID in (None, 0):
+            return
+
+        role = guild.get_role(MATH_PRO_ROLE_ID)
+        if role is None:
+            return
+
+        if self.math_pro_user_id is not None and self.math_pro_user_id != user_id:
+            old_member = guild.get_member(self.math_pro_user_id)
+            if old_member is not None:
+                await old_member.remove_roles(role, reason="Counting-Fehler: Rolle wurde weitergegeben")
+
+        new_member = guild.get_member(user_id)
+        if new_member is not None:
+            await new_member.add_roles(role, reason="Falsche Zahl im Counting")
+
+        self.math_pro_user_id = user_id
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.channel.id != COUNTING_CHANNEL_ID:
@@ -64,7 +83,7 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("❌")
+
             reset_message = (
                 f"{message.author.mention}, du warst bereits dran. "
                 f"Die Zählung wurde zurückgesetzt. Nächste Zahl: **1**"
@@ -77,19 +96,21 @@ class Counting(commands.Cog):
             self.count = 0
             self.last_user_id = None
             await self._save_count()
-            await message.add_reaction("❌")
-            reset_message = (
+
+            if message.guild is not None:
+                await self._handle_math_pro_role(message.guild, message.author.id)
+
+            standard_message = (
                 f"Falsche Zahl! Erwartet wurde **{expected}**. "
                 f"Die Zählung wurde zurückgesetzt. Nächste Zahl: **1**"
             )
-            await message.channel.send(self.counting_quote_func(reset_message))
+            await message.channel.send(self.counting_quote_func(standard_message))
             return
 
         # Richtig
         self.count = number
         self.last_user_id = message.author.id
         await self._save_count()
-        await message.add_reaction("✅")
 
     @commands.command(name="set")
     @commands.has_any_role(*ADMIN_ROLES)
