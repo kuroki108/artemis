@@ -22,6 +22,7 @@ bot = commands.Bot(
 
 async def setup_hook():
     await bot.load_extension("modules.counting")
+    await bot.load_extension("modules.bump_reminder")
 
 
 bot.setup_hook = setup_hook

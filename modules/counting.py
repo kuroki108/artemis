@@ -60,7 +60,7 @@ class Counting(commands.Cog):
                 self.count = 0
                 self.last_user_id = None
                 self.save_state()
-                await message.add_reaction("❌")
+                await message.add_reaction(":lunaRpalace~191:")
                 await message.channel.send(
                     f"{message.author.mention}, du warst bereits dran. "
                     "Zählung zurückgesetzt."
@@ -96,7 +96,7 @@ class Counting(commands.Cog):
                     self.counting_role_user_id = message.author.id
                     self.save_state()
 
-                await message.add_reaction("❌")
+                await message.add_reaction(":lunaRpalace~191:")
                 await message.channel.send(
                     f"Falsche Zahl! Erwartet wurde **{expected}**. "
                     "Zählung zurückgesetzt."
@@ -110,7 +110,7 @@ class Counting(commands.Cog):
             self.count = number
             self.last_user_id = message.author.id
             self.save_state()
-            await message.add_reaction("✅")
+            await message.add_reaction(":lunaRpalace~135:")
 
 
 async def setup(bot: commands.Bot):
