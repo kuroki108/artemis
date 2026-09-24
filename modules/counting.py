@@ -1,14 +1,21 @@
 import asyncio
 import json
+import logging
 import random
 from pathlib import Path
 
 import discord
 from discord.ext import commands
 
-from config import COUNTING_CHANNEL_ID, COUNTING_ROLE_ID
+from config import (
+    COUNTING_CHANNEL_ID,
+    COUNTING_CORRECT_EMOJI,
+    COUNTING_ROLE_ID,
+    COUNTING_WRONG_EMOJI,
+)
 from database import load_counting_state, save_counting_state
 
+log = logging.getLogger(__name__)
 
 # Pfad relativ zur Projektstruktur, damit der Bot aus jedem Ordner startet.
 QUOTES_PATH = Path(__file__).parent.parent / "data" / "counting_quotes.json"
@@ -36,6 +43,13 @@ class Counting(commands.Cog):
             self.counting_role_user_id,
         )
 
+    async def react(self, message: discord.Message, emoji: str):
+        # Eine fehlende Reaktion darf die Zählung nicht abbrechen.
+        try:
+            await message.add_reaction(emoji)
+        except discord.HTTPException:
+            log.exception("Reaktion %r konnte nicht gesetzt werden", emoji)
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot:
@@ -60,7 +74,7 @@ class Counting(commands.Cog):
                 self.count = 0
                 self.last_user_id = None
                 self.save_state()
-                await message.add_reaction(":lunaRpalace~191:")
+                await self.react(message, COUNTING_WRONG_EMOJI)
                 await message.channel.send(
                     f"{message.author.mention}, du warst bereits dran. "
                     "Zählung zurückgesetzt."
@@ -96,7 +110,7 @@ class Counting(commands.Cog):
                     self.counting_role_user_id = message.author.id
                     self.save_state()
 
-                await message.add_reaction(":lunaRpalace~191:")
+                await self.react(message, COUNTING_WRONG_EMOJI)
                 await message.channel.send(
                     f"Falsche Zahl! Erwartet wurde **{expected}**. "
                     "Zählung zurückgesetzt."
@@ -110,7 +124,7 @@ class Counting(commands.Cog):
             self.count = number
             self.last_user_id = message.author.id
             self.save_state()
-            await message.add_reaction(":lunaRpalace~135:")
+            await self.react(message, COUNTING_CORRECT_EMOJI)
 
 
 async def setup(bot: commands.Bot):

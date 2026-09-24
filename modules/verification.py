@@ -4,8 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# ID der Rolle, die Usere nach dem Klick bekommen (Rechtsklick auf Rolle -> "ID kopieren")
-VERIFIED_ROLE_ID: int = 1525983950839742546
+from config import VERIFIED_ROLE_ID
 
 # Fester custom_id, damit der Button auch nach einem Bot-Neustart funktioniert
 VERIFY_BUTTON_ID = "verification:verify_button"
