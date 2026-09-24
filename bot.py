@@ -32,11 +32,6 @@ async def on_ready():
     print(f"Bot ist online als {bot.user}")
 
 
-@bot.command()
-async def ping(ctx: commands.Context):
-    await ctx.send(f"Pong! 🏓")
-
-
 if __name__ == "__main__":
     if not TOKEN:
         raise RuntimeError("DISCORD_TOKEN wurde nicht gefunden.")

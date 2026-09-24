@@ -1,18 +1,20 @@
 import asyncio
+import json
 import random
+from pathlib import Path
 
 import discord
 from discord.ext import commands
 
 from config import COUNTING_CHANNEL_ID, COUNTING_ROLE_ID
 from database import load_counting_state, save_counting_state
-import json
 
 
+# Pfad relativ zur Projektstruktur, damit der Bot aus jedem Ordner startet.
+QUOTES_PATH = Path(__file__).parent.parent / "data" / "counting_quotes.json"
 
-with open("data/counting_quotes.json", "r", encoding="utf-8") as f:
+with open(QUOTES_PATH, "r", encoding="utf-8") as f:
     counting_quotes = json.load(f)
-    random_quote = random.choice(counting_quotes["wrong_number"])
 
 
 class Counting(commands.Cog):
@@ -99,7 +101,9 @@ class Counting(commands.Cog):
                     f"Falsche Zahl! Erwartet wurde **{expected}**. "
                     "Zählung zurückgesetzt. Nächste Zahl: **1**"
                 )
-                await message.channel.send(f"{random_quote}")
+                await message.channel.send(
+                    random.choice(counting_quotes["wrong_number"])
+                )
                 return
 
             # Richtig.

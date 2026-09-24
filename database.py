@@ -2,8 +2,8 @@ import sqlite3
 from pathlib import Path
 
 
-# Die Datei wird automatisch neben database.py angelegt.
-DATABASE_PATH = Path(__file__).with_name("master.db")
+# Die Datei wird automatisch in data/ neben database.py angelegt.
+DATABASE_PATH = Path(__file__).parent / "data" / "master.db"
 
 
 def load_counting_state(channel_id: int):
