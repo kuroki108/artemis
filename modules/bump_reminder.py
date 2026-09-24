@@ -19,6 +19,11 @@ THANKS_MESSAGE = (
     "**tysm{user}**  <a:lunaRpalace:1532899555715055616>\n"
     "**next bump in  <t:{due}:R>  (ᴗ͈ˬᴗ͈)ഒ**"
 )
+REMINDER_MESSAGE = (
+    "-# ||{role}||\n"
+    "# **hii  ,  can  u  </bump:947088344167366698>  the  server  ?**  "
+    "<a:lunaRpalace:1532899201590235347>"
+)
 
 
 def is_success(message: discord.Message) -> bool:
@@ -39,6 +44,8 @@ class BumpReminder(commands.Cog):
         self.lock = asyncio.Lock()
         # Fehler im Reminder nur einmal loggen statt alle 15 s.
         self.error_logged = False
+        # Zeitpunkt des nächsten Pings im Speicher, die DB nur bei Änderungen.
+        self.due = load_bump_due(BUMP_CHANNEL_ID)
 
     def log_error_once(self, text: str, exc_info: bool = False):
         if not self.error_logged:
@@ -63,6 +70,8 @@ class BumpReminder(commands.Cog):
         due = message.created_at.timestamp() + BUMP_INTERVAL_SECONDS
         async with self.lock:
             is_new = save_bump(BUMP_CHANNEL_ID, message.id, due)
+            if is_new:
+                self.due = due
         # Nur einmal pro Bump danken, auch wenn Send- und Edit-Event kommen.
         if is_new:
             await self.send_thanks(message, due)
@@ -89,8 +98,12 @@ class BumpReminder(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
-        # Slash-command replies may receive their embed through a later edit.
+        # Antworten auf Slash-Commands bekommen ihr Embed oft erst per Edit.
         if payload.channel_id != BUMP_CHANNEL_ID or "embeds" not in payload.data:
+            return
+        # Nur DISBOARD-Nachrichten nachladen, nicht jede Edit im Kanal.
+        author_id = payload.data.get("author", {}).get("id")
+        if author_id is not None and int(author_id) != DISBOARD_BOT_ID:
             return
         try:
             channel = self.bot.get_channel(BUMP_CHANNEL_ID)
@@ -105,8 +118,7 @@ class BumpReminder(commands.Cog):
         if not self.bot.is_ready():
             return
         async with self.lock:
-            due = load_bump_due(BUMP_CHANNEL_ID)
-            if due is None or due > time.time():
+            if self.due is None or self.due > time.time():
                 return
             try:
                 channel = self.bot.get_channel(BUMP_CHANNEL_ID)
@@ -118,7 +130,7 @@ class BumpReminder(commands.Cog):
                         "BUMP_PING_ROLE_ID muss eine existierende Rolle sein (nicht @everyone)")
                     return
                 await channel.send(
-                    f"#-# ||<@&1534664883138723912>||\n", "#**hii  {user.mention}  ,  can  u  </bump:947088344167366698>  the  server  ?**  <a:lunaRpalace:1532899201590235347>",
+                    REMINDER_MESSAGE.format(role=role.mention),
                     allowed_mentions=discord.AllowedMentions(
                         everyone=False, users=False, roles=[role], replied_user=False),
                 )
@@ -129,6 +141,7 @@ class BumpReminder(commands.Cog):
                 return
             self.error_logged = False
             # Nur ein Ping pro Bump, der nächste Timer startet mit dem nächsten Bump.
+            self.due = None
             set_bump_due(BUMP_CHANNEL_ID, None)
 
     @remind.before_loop
