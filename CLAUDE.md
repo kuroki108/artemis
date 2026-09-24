@@ -13,10 +13,11 @@ Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Aktuell einzige
 
 ## Struktur
 
-- `bot.py` – Einstiegspunkt, Intents, lädt Extensions in `setup_hook`, `!ping`.
+- `bot.py` – Einstiegspunkt, Intents, lädt Extensions in `setup_hook`.
 - `config.py` – hartkodierte Discord-IDs (Kanal, Rolle, Admin-Rollen).
-- `database.py` – synchrones `sqlite3`, eine Tabelle `counting_state` (pro Kanal-ID eine Zeile).
+- `database.py` – der gesamte DB-Zugriff (synchrones `sqlite3`, eine Verbindung pro Aufruf); Tabellen `counting_state` und `bump_reminder`, je eine Zeile pro Kanal-ID. Module greifen nie direkt auf SQLite zu.
 - `modules/counting.py` – Cog `Counting`: Zustand im Speicher, nach jeder Änderung in SQLite gespiegelt; `asyncio.Lock` serialisiert Nachrichten.
+- `modules/bump_reminder.py` – Cog `BumpReminder`: erkennt erfolgreiche DISBOARD-Bumps (Embed-Text) und dankt dem Bumper (`THANKS_MESSAGE`, einmal pro Bump dank Rückgabewert von `save_bump`) und pingt nach `BUMP_INTERVAL_SECONDS` einmal die Rolle (nächster Ping erst nach dem nächsten Bump); `tasks.loop` alle 15 s, Fehler werden nur einmal geloggt, Zustand in Tabelle `bump_reminder`. Wird übersprungen, solange die IDs in `config.py` `0` sind.
 - `data/counting_quotes.json` – Sprüche bei falscher Zahl (`wrong_number`).
 
 ## Konventionen
@@ -28,5 +29,5 @@ Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Aktuell einzige
 ## Bekannte Stolperfallen
 
 - Die DB liegt in `data/master.db` (`DATABASE_PATH` in `database.py`).
-- `*.db` ist nicht in `.gitignore`; die DB war früher schon mal committed.
+- `*.db` ist gitignored; die DB nie wieder committen.
 - Offene Review-Befunde: `.claude/reviews/2026-09-24-review.md`.
