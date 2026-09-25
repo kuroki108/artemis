@@ -24,7 +24,7 @@ class VerifyView(discord.ui.View):
     @discord.ui.button(
         label="Verifizieren",
         style=discord.ButtonStyle.secondary,
-        emoji="<a:lunaRpalace:1532899609351819344>",
+        emoji="<:lunaRpalace:1532897908901285970>",
         custom_id=VERIFY_BUTTON_ID,
     )
     async def verify(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
@@ -49,8 +49,9 @@ class VerifyView(discord.ui.View):
             return
 
         try:
-            await member.add_roles(VERIFIED_ROLE_ID)
-            await member.remove_roles(UNVERIFIED_ROLE_ID)
+            await member.add_roles(role)
+            # remove_roles braucht ein Objekt mit .id, eine nackte int-ID crasht
+            await member.remove_roles(discord.Object(id=UNVERIFIED_ROLE_ID))
         except discord.Forbidden:
             await interaction.response.send_message(
                 "Ich darf dir die Rolle nicht geben (fehlende Rechte). Bitte melde dich beim Team.",
@@ -64,7 +65,7 @@ class VerifyView(discord.ui.View):
             return
 
         await interaction.response.send_message(
-            f"<a:lunaRpalace:1532899609351819344> Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
+            "<a:lunaRpalace:1532899609351819344> Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
         )
 
 

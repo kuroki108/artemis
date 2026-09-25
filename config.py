@@ -5,10 +5,11 @@
 # Counting
 COUNTING_CHANNEL_ID = 1509590687010783233
 # Rolle für den, der die Zählung zuletzt ruiniert hat.
-COUNTING_ROLE_ID = 1552418320257519777
+COUNTING_ROLE_ID = 1509590685140127833
+
 # Reaktionen: Unicode-Emoji oder Custom-Emoji als "name:id" (nicht ":name~123:").
-COUNTING_CORRECT_EMOJI = "lunaRpalace:1532897908901285970"
-COUNTING_WRONG_EMOJI = "lunaRpalace:1544143111335182446"
+COUNTING_CORRECT_EMOJI = "<:lunaRpalace:1532899609351819344>"
+COUNTING_WRONG_EMOJI = "<:lunaRpalace:1544143111335182446>"
 
 
 # Bump-Reminder (0 = nicht konfiguriert, Modul wird dann übersprungen)
