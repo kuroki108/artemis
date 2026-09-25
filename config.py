@@ -3,7 +3,7 @@
 
 
 # Counting
-COUNTING_CHANNEL_ID = 1552373747170681023
+COUNTING_CHANNEL_ID = 1509590687010783233
 # Rolle für den, der die Zählung zuletzt ruiniert hat.
 COUNTING_ROLE_ID = 1552418320257519777
 # Reaktionen: Unicode-Emoji oder Custom-Emoji als "name:id" (nicht ":name~123:").
@@ -22,3 +22,5 @@ BUMP_INTERVAL_SECONDS = 2 * 60 * 60
 # Verifizierung
 # Rolle, die User nach dem Klick auf den Button bekommen.
 VERIFIED_ROLE_ID = 1525983950839742546
+# Emoji im Titel des Verifizierungs-Embeds (Custom-Emoji immer mit ID: "<a:name:id>").
+VERIFICATION_EMOJI = "<a:lunaRpalace:1533125760884281355>"
