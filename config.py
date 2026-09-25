@@ -22,5 +22,5 @@ BUMP_INTERVAL_SECONDS = 2 * 60 * 60
 # Verifizierung
 # Rolle, die User nach dem Klick auf den Button bekommen.
 VERIFIED_ROLE_ID = 1525983950839742546
+UNVERIFIED_ROLE_ID = 1525983635897978981
 # Emoji im Titel des Verifizierungs-Embeds (Custom-Emoji immer mit ID: "<a:name:id>").
-VERIFICATION_EMOJI = "<a:lunaRpalace:1533125760884281355>"
