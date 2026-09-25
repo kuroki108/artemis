@@ -65,7 +65,7 @@ class VerifyView(discord.ui.View):
             return
 
         await interaction.response.send_message(
-            "<a:lunaRpalace:1532899609351819344> Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
+            "Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
         )
 
 
