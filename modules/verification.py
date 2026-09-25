@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import discord
 from discord import app_commands
 from discord.ext import commands
 
-from config import VERIFIED_ROLE_ID
+from config import VERIFICATION_EMOJI, VERIFIED_ROLE_ID
+
+# Über __file__ aufgelöst, damit der Pfad unabhängig vom CWD stimmt
+VERIFY_GIF_PATH = Path(__file__).resolve().parent.parent / "assets" / "gif.gif"
 
 # Fester custom_id, damit der Button auch nach einem Bot-Neustart funktioniert
 VERIFY_BUTTON_ID = "verification:verify_button"
@@ -18,8 +23,8 @@ class VerifyView(discord.ui.View):
 
     @discord.ui.button(
         label="Verifizieren",
-        style=discord.ButtonStyle.success,
-        emoji="✅",
+        style=discord.ButtonStyle.secondary,
+        emoji=":lunaRpalace:1532899609351819344",
         custom_id=VERIFY_BUTTON_ID,
     )
     async def verify(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
@@ -58,7 +63,7 @@ class VerifyView(discord.ui.View):
             return
 
         await interaction.response.send_message(
-            "✅ Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
+            f"{VERIFICATION_EMOJI}Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
         )
 
 
@@ -79,16 +84,20 @@ class Verification(commands.Cog):
             return
 
         embed = discord.Embed(
-            title="Verifizierung",
+            title=f"{VERIFICATION_EMOJI} Verifizierung",
             description=(
-                "Willkommen auf dem Server! 👋\n\n"
-                "Klicke auf den Button unten, um dich zu verifizieren "
-                "und Zugriff auf alle Channels zu bekommen."
+                "**Willkommen auf lunaR palace!**\n\n"
+                "Dieser Server erfordert, dass du dich verifizierst, um Zugriff auf die anderen Kanäle zu erhalten.\n\n"
+                "Du kannst dich ganz einfach verifizieren, indem du auf den „Verifizieren“-Button unten klickst."
             ),
-            color=discord.Color.green(),
+            color=discord.Color.light_embed(),
         )
+        embed.set_footer(text="⟣ 🪽 lunaR palace ₊ ⊹")
+        # GIF als Anhang hochladen und direkt im Embed anzeigen
+        file = discord.File(VERIFY_GIF_PATH, filename="verify.gif")
+        embed.set_image(url="attachment://verify.gif")
 
-        await interaction.channel.send(embed=embed, view=VerifyView())
+        await interaction.channel.send(embed=embed, file=file, view=VerifyView())
         await interaction.response.send_message("Verifizierungs-Embed wurde gepostet.", ephemeral=True)
 
 
