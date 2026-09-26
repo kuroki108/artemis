@@ -21,7 +21,7 @@ THANKS_MESSAGE = (
 )
 REMINDER_MESSAGE = (
     "-# ||{role}||\n"
-    "# **hii  ,  can  u  </bump:947088344167366698>  the  server  ?**  "
+    "**hii  {user}  ,  can  u  </bump:947088344167366698>  the  server  ?**"
     "<a:lunaRpalace:1532899201590235347>"
 )
 
