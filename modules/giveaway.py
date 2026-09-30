@@ -81,10 +81,6 @@ def build_embed(gw: GiveawayRecord, winner_id: int | None = None, entries: int =
         lines = [
             f"-# Endet: <t:{gw.ends_at}:R>  ·  <t:{gw.ends_at}:f>",
             f"-# Teilnahme: {audience}",
-            f"-# Gastgeber: <@{gw.host_id}>",
-            "",
-            "-# Du kannst ganz einfach mitmachen, indem du auf den "
-            "„Teilnehmen“-Button unten klickst.",
         ]
 
     embed = discord.Embed(
@@ -95,7 +91,6 @@ def build_embed(gw: GiveawayRecord, winner_id: int | None = None, entries: int =
         ),
         color=discord.Color.light_embed(),
     )
-    embed.set_footer(text=f"Giveaway #{gw.id}")
     if BANNER_PATH.is_file():
         embed.set_image(url=f"attachment://{BANNER_NAME}")
     return embed
