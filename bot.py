@@ -27,6 +27,7 @@ async def setup_hook():
     await bot.load_extension("modules.counting")
     #await bot.load_extension("modules.bump_reminder")
     await bot.load_extension("modules.verification")
+    await bot.load_extension("modules.giveaway")
     # Slash-Commands bei Discord registrieren, sonst tauchen sie nicht auf.
     synced = await bot.tree.sync()
     log.info("%d Slash-Command(s) synchronisiert", len(synced))
