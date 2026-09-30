@@ -25,3 +25,14 @@ BUMP_INTERVAL_SECONDS = 2 * 60 * 60
 VERIFIED_ROLE_ID = 1525983950839742546
 UNVERIFIED_ROLE_ID = 1525983635897978981
 # Emoji im Titel des Verifizierungs-Embeds (Custom-Emoji immer mit ID: "<a:name:id>").
+
+
+# Giveaway
+# Emoji im Titel des Giveaway-Embeds.
+GIVEAWAY_EMOJI = "<a:lunaRpalace:1533125760884281355>"
+# Emoji auf dem Teilnehmen-Button.
+GIVEAWAY_BUTTON_EMOJI = "<:lunaRpalace:1532897908901285970>"
+# Emoji in der Gewinner-Nachricht.
+GIVEAWAY_WINNER_EMOJI = "<a:lunaRpalace:1532899555715055616>"
+# Wie oft nach abgelaufenen Giveaways geschaut wird.
+GIVEAWAY_CHECK_SECONDS = 15

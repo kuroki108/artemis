@@ -1,6 +1,6 @@
 # Artemis – Discord-Bot
 
-Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Features: Zähl-Kanal (Counting-Game) mit „Schande-Rolle“, DISBOARD-Bump-Reminder, Button-Verifizierung, Giveaways (geplant, Datei leer).
+Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Features: Zähl-Kanal (Counting-Game) mit „Schande-Rolle“, DISBOARD-Bump-Reminder, Button-Verifizierung, Giveaways per Button.
 
 ## Setup & Start
 
@@ -15,11 +15,11 @@ Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Features: Zähl
 
 - `bot.py` – Einstiegspunkt, Intents, lädt Extensions und ruft `bot.tree.sync()` (global) in `setup_hook`; `bot.run(..., root_logger=True)`, damit `logging.getLogger(__name__)` der Module in der Konsole landet. Kein `print`.
 - `config.py` – alle Discord-IDs und Einstellungen (Counting inkl. Reaktions-Emojis, Bump, Verifizierung).
-- `database.py` – der gesamte DB-Zugriff (synchrones `sqlite3`, eine Verbindung pro Aufruf); Tabellen `counting_state` und `bump_reminder`, je eine Zeile pro Kanal-ID. Module greifen nie direkt auf SQLite zu.
+- `database.py` – der gesamte DB-Zugriff (synchrones `sqlite3`, eine Verbindung pro Aufruf); Tabellen `counting_state` und `bump_reminder` (je eine Zeile pro Kanal-ID) sowie `giveaways`, `giveaway_entries`, `giveaway_winners` (über `_giveaway_connection()`, liefert `GiveawayRecord`). Module greifen nie direkt auf SQLite zu.
 - `modules/counting.py` – Cog `Counting`: Zustand im Speicher, nach jeder Änderung in SQLite gespiegelt; `asyncio.Lock` serialisiert Nachrichten; Reaktionen über `react()`, das HTTP-Fehler nur loggt.
 - `modules/bump_reminder.py` – Cog `BumpReminder`: erkennt erfolgreiche DISBOARD-Bumps (Embed-Text), dankt dem Bumper (`THANKS_MESSAGE`, einmal pro Bump dank Rückgabewert von `save_bump`) und pingt nach `BUMP_INTERVAL_SECONDS` einmal die Rolle (nächster Ping erst nach dem nächsten Bump); `tasks.loop` alle 15 s, Fehler werden nur einmal geloggt. Nächster Ping-Zeitpunkt wird in `self.due` gecacht (DB nur beim Start gelesen, nur bei Änderung geschrieben); Edits fremder Autoren werden ohne API-Call verworfen. Texte in `THANKS_MESSAGE`/`REMINDER_MESSAGE`. Wird übersprungen, solange die IDs in `config.py` `0` sind.
 - `modules/verification.py` – Cog `Verification`: persistente View (`custom_id` fest) mit Button, der `VERIFIED_ROLE_ID` vergibt; `/verify-setup` (nur Admins) postet das Embed.
-- `modules/giveaway.py` – leer, nicht geladen (bräuchte `async def setup`).
+- `modules/giveaway.py` – Cog `Giveaway`: `/giveaway start|beenden|reroll` (nur „Server verwalten“); persistenter `JoinButton` (`DynamicItem`, Giveaway-ID in der `custom_id`); `tasks.loop` lost fällige Giveaways aus, `mark_giveaway_ended` verhindert Doppel-Auslosung. Embed im Stil der Verifizierung, Texte in `WIN_MESSAGE` usw.; optionales Bild `assets/giveaway.gif`.
 - `data/counting_quotes.json` – Sprüche bei falscher Zahl (`wrong_number`).
 
 ## Konventionen
