@@ -319,3 +319,68 @@ def add_giveaway_winner(giveaway_id: int, user_id: int):
             "INSERT OR IGNORE INTO giveaway_winners VALUES (?, ?)",
             (giveaway_id, user_id),
         )
+
+
+def _create_vc_table(connection: sqlite3.Connection):
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS vc_master_channels (
+            channel_id INTEGER PRIMARY KEY,
+            owner_id INTEGER NOT NULL
+        )
+        """
+    )
+
+
+def save_vc_channel(channel_id: int, owner_id: int):
+    """Legt einen VoiceMaster-Kanal an oder ändert dessen Besitzer."""
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            connection.execute(
+                """
+                INSERT INTO vc_master_channels (channel_id, owner_id) VALUES (?, ?)
+                ON CONFLICT(channel_id) DO UPDATE SET owner_id = excluded.owner_id
+                """,
+                (channel_id, owner_id),
+            )
+    finally:
+        connection.close()
+
+
+def load_vc_owner(channel_id: int) -> int | None:
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            row = connection.execute(
+                "SELECT owner_id FROM vc_master_channels WHERE channel_id = ?",
+                (channel_id,),
+            ).fetchone()
+        return row[0] if row is not None else None
+    finally:
+        connection.close()
+
+
+def load_vc_channel_ids() -> list[int]:
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            rows = connection.execute("SELECT channel_id FROM vc_master_channels").fetchall()
+        return [row[0] for row in rows]
+    finally:
+        connection.close()
+
+
+def delete_vc_channel(channel_id: int):
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            connection.execute(
+                "DELETE FROM vc_master_channels WHERE channel_id = ?", (channel_id,)
+            )
+    finally:
+        connection.close()
