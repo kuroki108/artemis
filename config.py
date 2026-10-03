@@ -36,3 +36,14 @@ GIVEAWAY_BUTTON_EMOJI = "<:lunaRpalace:1532897908901285970>"
 GIVEAWAY_WINNER_EMOJI = "<a:lunaRpalace:1532899555715055616>"
 # Wie oft nach abgelaufenen Giveaways geschaut wird.
 GIVEAWAY_CHECK_SECONDS = 15
+
+
+# VoiceMaster (0 = nicht konfiguriert, Join-to-Create ist dann inaktiv)
+# Emoji im Titel des Interface-Embeds.
+VC_MASTER = "<:lunaRpalace:1532899609351819344>"
+# Pfeil vor den Einträgen im Interface-Embed.
+VC_MASTER_ARROW = "➤"
+# Beitreten erstellt einen eigenen Sprachkanal.
+VC_MASTER_CREATE_CHANNEL_ID = 0
+# Kategorie für die erstellten Kanäle (0 = Kategorie des Create-Kanals).
+VC_MASTER_CATEGORY_ID = 0
