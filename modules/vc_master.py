@@ -27,21 +27,21 @@ EMBED_COLOR = 0x2B2D31
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
-# Einträge im Interface-Embed (Emoji, Name, Text), links / rechts, genau wie die Buttons
+# Einträge im Interface-Embed (Name, Text), links / rechts, genau wie die Buttons
 LEFT_COLUMN = [
-    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
-    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
-    (VC_MASTER_CLAIM_EMOJI, "claim", "the voice channel"),
+    ("lock", "the voice channel"),
+    ("unlock", "the voice channel"),
+    ("claim", "the voice channel"),
 ]
 RIGHT_COLUMN = [
-    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
-    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
-    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
+    ("disconnect", "a member"),
+    ("change", "user limit"),
+    ("rename", "the voice channel"),
 ]
 
 
-def _column(entries: list[tuple[str, str, str]]) -> str:
-    return "\n".join(f"{VC_MASTER_ARROW} {emoji} `{name}` {text}" for emoji, name, text in entries)
+def _column(entries: list[tuple[str, str]]) -> str:
+    return "\n".join(f"{VC_MASTER_ARROW} `{name}` {text}" for name, text in entries)
 
 
 def interface_embed(guild: discord.Guild) -> discord.Embed:
@@ -178,7 +178,7 @@ class VoiceInterface(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
 
-    @discord.ui.button(emoji="🔒", style=discord.ButtonStyle.secondary, custom_id="vcmaster:lock")
+    @discord.ui.button(emoji=VC_MASTER_LOCK_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:lock")
     async def lock(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -192,7 +192,7 @@ class VoiceInterface(discord.ui.View):
         await channel.set_permissions(interaction.user, overwrite=owner)
         await reply(interaction, f"{channel.mention} wurde gesperrt.")
 
-    @discord.ui.button(emoji="🔓", style=discord.ButtonStyle.secondary, custom_id="vcmaster:unlock")
+    @discord.ui.button(emoji=VC_MASTER_UNLOCK_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:unlock")
     async def unlock(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -202,7 +202,7 @@ class VoiceInterface(discord.ui.View):
         await channel.set_permissions(interaction.guild.default_role, overwrite=everyone)
         await reply(interaction, f"{channel.mention} wurde entsperrt.")
 
-    @discord.ui.button(emoji="👑", style=discord.ButtonStyle.secondary, custom_id="vcmaster:claim")
+    @discord.ui.button(emoji=VC_MASTER_CLAIM_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:claim")
     async def claim(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction, owner_only=False)
         if channel is None:
@@ -216,7 +216,7 @@ class VoiceInterface(discord.ui.View):
             database.save_vc_channel(channel.id, interaction.user.id)
             await reply(interaction, f"{channel.mention} gehört jetzt dir.")
 
-    @discord.ui.button(emoji="🔌", style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect")
+    @discord.ui.button(emoji=VC_MASTER_DISCONNECT_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect")
     async def disconnect(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -225,14 +225,14 @@ class VoiceInterface(discord.ui.View):
             view=PickerView(DisconnectSelect(channel)), ephemeral=True
         )
 
-    @discord.ui.button(emoji="👥", style=discord.ButtonStyle.secondary, custom_id="vcmaster:limit")
+    @discord.ui.button(emoji=VC_MASTER_LIMIT_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:limit")
     async def limit(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
             return
         await interaction.response.send_modal(LimitModal(channel))
 
-    @discord.ui.button(emoji="✏️", style=discord.ButtonStyle.secondary, custom_id="vcmaster:rename")
+    @discord.ui.button(emoji=VC_MASTER_RENAME_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:rename")
     async def rename(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
