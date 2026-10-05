@@ -11,7 +11,13 @@ from config import (
     VC_MASTER,
     VC_MASTER_ARROW,
     VC_MASTER_CATEGORY_ID,
+    VC_MASTER_CLAIM_EMOJI,
     VC_MASTER_CREATE_CHANNEL_ID,
+    VC_MASTER_DISCONNECT_EMOJI,
+    VC_MASTER_LIMIT_EMOJI,
+    VC_MASTER_LOCK_EMOJI,
+    VC_MASTER_RENAME_EMOJI,
+    VC_MASTER_UNLOCK_EMOJI,
 )
 
 log = logging.getLogger(__name__)
@@ -21,21 +27,21 @@ EMBED_COLOR = 0x2B2D31
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
-# Einträge im Interface-Embed (links / rechts), genau wie die Buttons
+# Einträge im Interface-Embed (Emoji, Name, Text), links / rechts, genau wie die Buttons
 LEFT_COLUMN = [
-    ("lock", "the voice channel"),
-    ("unlock", "the voice channel"),
-    ("claim", "the voice channel"),
+    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
+    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
+    (VC_MASTER_CLAIM_EMOJI, "claim", "the voice channel"),
 ]
 RIGHT_COLUMN = [
-    ("disconnect", "a member"),
-    ("change", "user limit"),
-    ("rename", "the voice channel"),
+    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
+    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
+    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
 ]
 
 
-def _column(entries: list[tuple[str, str]]) -> str:
-    return "\n".join(f"{VC_MASTER_ARROW} `{name}` {text}" for name, text in entries)
+def _column(entries: list[tuple[str, str, str]]) -> str:
+    return "\n".join(f"{VC_MASTER_ARROW} {emoji} `{name}` {text}" for emoji, name, text in entries)
 
 
 def interface_embed(guild: discord.Guild) -> discord.Embed:
