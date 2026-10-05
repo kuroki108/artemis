@@ -40,9 +40,9 @@ GIVEAWAY_CHECK_SECONDS = 15
 
 # VoiceMaster (0 = nicht konfiguriert, Join-to-Create ist dann inaktiv)
 # Emoji im Titel des Interface-Embeds.
-VC_MASTER = "<:lunaRpalace:1532899609351819344>"
+VC_MASTER = "<a:lunaRpalace:1533125760884281355>"
 # Pfeil vor den Einträgen im Interface-Embed.
-VC_MASTER_ARROW = "➤"
+VC_MASTER_ARROW = "<:lunaRpalace:1541211249797242881>"
 # Beitreten erstellt einen eigenen Sprachkanal.
 VC_MASTER_CREATE_CHANNEL_ID = 1556053383511679016
 # Kategorie für die erstellten Kanäle (0 = Kategorie des Create-Kanals).

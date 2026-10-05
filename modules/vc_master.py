@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 import discord
 from discord.ext import commands
@@ -16,6 +17,8 @@ from config import (
 log = logging.getLogger(__name__)
 
 EMBED_COLOR = 0x2B2D31
+# Über __file__ aufgelöst, damit der Pfad unabhängig vom CWD stimmt
+SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
 # Einträge im Interface-Embed (links / rechts), genau wie die Buttons
@@ -27,6 +30,7 @@ LEFT_COLUMN = [
 RIGHT_COLUMN = [
     ("disconnect", "a member"),
     ("change", "user limit"),
+    ("rename", "the voice channel"),
 ]
 
 
@@ -39,17 +43,15 @@ def interface_embed(guild: discord.Guild) -> discord.Embed:
     embed = discord.Embed(
         description=(
             f"# {VC_MASTER} __VoiceMaster Interface__\n"
-            f"└ Klick [hier]({link}) um einen VC zu erstellen."
+            f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen."
         ),
         color=EMBED_COLOR,
     )
     embed.add_field(name="​", value=_column(LEFT_COLUMN), inline=True)
     embed.add_field(name="​", value=_column(RIGHT_COLUMN), inline=True)
-    embed.add_field(
-        name="​",
-        value="━" * 34 + "\n-# **Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.**",
-        inline=False,
-    )
+    # Das Bild trennt Liste und Hinweis; der Footer steht in Discord unter dem Bild
+    embed.set_image(url=f"attachment://{SEPARATOR_PATH.name}")
+    embed.set_footer(text="Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.")
     return embed
 
 
@@ -103,6 +105,37 @@ class LimitModal(discord.ui.Modal, title="User-Limit ändern"):
         await reply(interaction, f"{self.channel.mention} hat jetzt ein Limit von **{text}**.")
 
 
+class RenameModal(discord.ui.Modal, title="Kanal umbenennen"):
+    name = discord.ui.TextInput(label="Neuer Name", min_length=1, max_length=100)
+
+    def __init__(self, channel: discord.VoiceChannel) -> None:
+        super().__init__()
+        self.channel = channel
+        self.name.default = channel.name
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            await self.channel.edit(name=self.name.value.strip())
+        except discord.RateLimited as e:
+            # Discord erlaubt nur 2 Umbenennungen pro 10 Minuten
+            await interaction.followup.send(
+                embed=reply_embed(
+                    f"Zu viele Umbenennungen. Versuch es in {int(e.retry_after // 60) + 1} Minute(n) nochmal."
+                ),
+                ephemeral=True,
+            )
+            return
+        except discord.HTTPException as e:
+            await interaction.followup.send(
+                embed=reply_embed(f"Umbenennen fehlgeschlagen: {e.text}"), ephemeral=True
+            )
+            return
+        await interaction.followup.send(
+            embed=reply_embed(f"Kanal umbenannt in **{self.channel.name}**."), ephemeral=True
+        )
+
+
 class DisconnectSelect(discord.ui.UserSelect):
     def __init__(self, channel: discord.VoiceChannel) -> None:
         super().__init__(placeholder="Wähle ein Mitglied …")
@@ -134,12 +167,12 @@ class PickerView(discord.ui.View):
 
 
 class VoiceInterface(discord.ui.View):
-    """Persistente Buttons (feste custom_ids), zwei Reihen."""
+    """Persistente Buttons (feste custom_ids), eine Reihe."""
 
     def __init__(self) -> None:
         super().__init__(timeout=None)
 
-    @discord.ui.button(emoji="🔒", style=discord.ButtonStyle.secondary, custom_id="vcmaster:lock", row=0)
+    @discord.ui.button(emoji="🔒", style=discord.ButtonStyle.secondary, custom_id="vcmaster:lock")
     async def lock(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -153,7 +186,7 @@ class VoiceInterface(discord.ui.View):
         await channel.set_permissions(interaction.user, overwrite=owner)
         await reply(interaction, f"{channel.mention} wurde gesperrt.")
 
-    @discord.ui.button(emoji="🔓", style=discord.ButtonStyle.secondary, custom_id="vcmaster:unlock", row=0)
+    @discord.ui.button(emoji="🔓", style=discord.ButtonStyle.secondary, custom_id="vcmaster:unlock")
     async def unlock(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -163,7 +196,7 @@ class VoiceInterface(discord.ui.View):
         await channel.set_permissions(interaction.guild.default_role, overwrite=everyone)
         await reply(interaction, f"{channel.mention} wurde entsperrt.")
 
-    @discord.ui.button(emoji="👑", style=discord.ButtonStyle.secondary, custom_id="vcmaster:claim", row=0)
+    @discord.ui.button(emoji="👑", style=discord.ButtonStyle.secondary, custom_id="vcmaster:claim")
     async def claim(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction, owner_only=False)
         if channel is None:
@@ -177,7 +210,7 @@ class VoiceInterface(discord.ui.View):
             database.save_vc_channel(channel.id, interaction.user.id)
             await reply(interaction, f"{channel.mention} gehört jetzt dir.")
 
-    @discord.ui.button(emoji="🔌", style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect", row=1)
+    @discord.ui.button(emoji="🔌", style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect")
     async def disconnect(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
@@ -186,12 +219,19 @@ class VoiceInterface(discord.ui.View):
             view=PickerView(DisconnectSelect(channel)), ephemeral=True
         )
 
-    @discord.ui.button(emoji="👥", style=discord.ButtonStyle.secondary, custom_id="vcmaster:limit", row=1)
+    @discord.ui.button(emoji="👥", style=discord.ButtonStyle.secondary, custom_id="vcmaster:limit")
     async def limit(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         channel = await get_vc(interaction)
         if channel is None:
             return
         await interaction.response.send_modal(LimitModal(channel))
+
+    @discord.ui.button(emoji="✏️", style=discord.ButtonStyle.secondary, custom_id="vcmaster:rename")
+    async def rename(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        channel = await get_vc(interaction)
+        if channel is None:
+            return
+        await interaction.response.send_modal(RenameModal(channel))
 
 
 class VcMaster(commands.Cog):
@@ -269,7 +309,11 @@ class VcMaster(commands.Cog):
         if not VC_MASTER_CREATE_CHANNEL_ID:
             await ctx.send("`VC_MASTER_CREATE_CHANNEL_ID` ist in der config.py noch nicht gesetzt.")
             return
-        await ctx.send(embed=interface_embed(ctx.guild), view=VoiceInterface())
+        await ctx.send(
+            embed=interface_embed(ctx.guild),
+            file=discord.File(SEPARATOR_PATH),
+            view=VoiceInterface(),
+        )
         # Der Aufruf selbst wird entfernt, damit nur das Interface stehen bleibt
         try:
             await ctx.message.delete()
