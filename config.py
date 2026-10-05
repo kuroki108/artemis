@@ -54,3 +54,5 @@ VC_MASTER_RENAME_EMOJI = "<:lunaRpalace:1556771351438819379>"
 VC_MASTER_CREATE_CHANNEL_ID = 1545980745644769402
 # Kategorie für die erstellten Kanäle (0 = Kategorie des Create-Kanals).
 VC_MASTER_CATEGORY_ID = 0
+
+VC_MASTER_ALWAYS_ROLE_IDS: list[int] = [1509590685140127830] #Management
