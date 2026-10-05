@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 BUMP_TEXTS = ("bump erfolgreich!", "bump done")
 
-# Dank an den Bumper; {user} wird zur Erwähnung.
+# Dank an den Bumper; {user} wird zur Erwähnung, {due} zum Unix-Timestamp des nächsten Bumps.
 THANKS_MESSAGE = (
     "**tysm{user}**  <a:lunaRpalace:1532899555715055616>\n"
     "**next bump in  <t:{due}:R>  (ᴗ͈ˬᴗ͈)ഒ**"
@@ -96,7 +96,8 @@ class BumpReminder(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         if not is_bump_success(message):
             return
-        self.schedule(message.channel.id, time.time() + BUMP_INTERVAL_SECONDS)
+        due = time.time() + BUMP_INTERVAL_SECONDS
+        self.schedule(message.channel.id, due)
         log.info("Timer gestartet für Channel %s", message.channel.id)
 
         # Wer /bump ausgeführt hat, steht in den Interaction-Daten der Disboard-Antwort
@@ -105,7 +106,7 @@ class BumpReminder(commands.Cog):
             return
         try:
             await message.channel.send(
-                THANKS_MESSAGE.format(user=metadata.user.mention),
+                THANKS_MESSAGE.format(user=metadata.user.mention, due=int(due)),
                 allowed_mentions=discord.AllowedMentions(users=True),
             )
         except discord.HTTPException as e:
