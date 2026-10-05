@@ -43,7 +43,14 @@ GIVEAWAY_CHECK_SECONDS = 15
 VC_MASTER = "<a:lunaRpalace:1533125760884281355>"
 # Pfeil vor den Einträgen im Interface-Embed.
 VC_MASTER_ARROW = "<:lunaRpalace:1541211249797242881>"
+# Emojis vor den Aktionen im Interface-Embed (Custom-Emoji immer mit ID: "<:name:id>").
+VC_MASTER_LOCK_EMOJI = "<:lunaRpalace:1556771278742888508>"
+VC_MASTER_UNLOCK_EMOJI = "<:lunaRpalace:1556771298334613544>"
+VC_MASTER_CLAIM_EMOJI = "<:lunaRpalace:1529889987204743249>"
+VC_MASTER_DISCONNECT_EMOJI = "<:lunaRpalace:1556771392056467526>"
+VC_MASTER_LIMIT_EMOJI = "<:lunaRpalace:1556771437765992539>"
+VC_MASTER_RENAME_EMOJI = "<:lunaRpalace:1556771351438819379>"
 # Beitreten erstellt einen eigenen Sprachkanal.
-VC_MASTER_CREATE_CHANNEL_ID = 1556053383511679016
+VC_MASTER_CREATE_CHANNEL_ID = 1545980745644769402
 # Kategorie für die erstellten Kanäle (0 = Kategorie des Create-Kanals).
 VC_MASTER_CATEGORY_ID = 0
