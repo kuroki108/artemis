@@ -9,6 +9,7 @@ from discord.ext import commands
 import database
 from config import (
     VC_MASTER,
+    VC_MASTER_ALWAYS_ROLE_IDS,
     VC_MASTER_ARROW,
     VC_MASTER_CATEGORY_ID,
     VC_MASTER_CLAIM_EMOJI,
@@ -290,10 +291,16 @@ class VcMaster(commands.Cog):
         category = (
             member.guild.get_channel(VC_MASTER_CATEGORY_ID) if VC_MASTER_CATEGORY_ID else trigger.category
         )
+        # Explizite Overwrites ersetzen die der Kategorie, daher werden sie hier übernommen
+        overwrites = dict(category.overwrites) if category else {}
+        for role_id in VC_MASTER_ALWAYS_ROLE_IDS:
+            if (role := member.guild.get_role(role_id)) is not None:
+                overwrites[role] = discord.PermissionOverwrite(connect=True, view_channel=True)
         try:
             channel = await member.guild.create_voice_channel(
                 name=f"{member.display_name}'s VC",
                 category=category,
+                overwrites=overwrites,
                 reason=f"VoiceMaster: Kanal für {member}",
             )
         except discord.HTTPException:
