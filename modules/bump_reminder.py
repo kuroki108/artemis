@@ -1,160 +1,116 @@
 import asyncio
+import json
 import logging
+import os
 import time
+from pathlib import Path
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
-from config import (
-    BUMP_CHANNEL_ID,
-    BUMP_INTERVAL_SECONDS,
-    BUMP_PING_ROLE_ID,
-    DISBOARD_BOT_ID,
-)
-from database import load_bump_due, save_bump, set_bump_due
+from config import BUMP_INTERVAL_SECONDS, BUMP_PING_ROLE_ID, DISBOARD_BOT_ID
 
 log = logging.getLogger(__name__)
 
+BUMP_TEXTS = ("bump erfolgreich!", "bump done")
+
+# Dank an den Bumper; {user} wird zur Erwähnung.
 THANKS_MESSAGE = (
     "**tysm{user}**  <a:lunaRpalace:1532899555715055616>\n"
     "**next bump in  <t:{due}:R>  (ᴗ͈ˬᴗ͈)ഒ**"
 )
-REMINDER_MESSAGE = (
-    "-# ||{role}||\n"
-    "**hii  {user}  ,  can  u  </bump:947088344167366698>  the  server  ?**"
-    "<a:lunaRpalace:1532899201590235347>"
-)
+
+STATE_FILE = Path(__file__).resolve().parent.parent / "data" / "reminders.json"
 
 
-def is_success(message: discord.Message) -> bool:
-    if (message.guild is None or message.channel.id != BUMP_CHANNEL_ID
-            or message.author.id != DISBOARD_BOT_ID):
+def load_pending() -> dict[str, float]:
+    try:
+        with open(STATE_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def is_bump_success(message: discord.Message) -> bool:
+    if message.author.id != DISBOARD_BOT_ID:
         return False
-    for embed in message.embeds:
-        text = "\n".join(filter(None, [embed.title, embed.description]))
-        text += "\n" + "\n".join(f"{f.name}\n{f.value}" for f in embed.fields)
-        if any(s in text.casefold() for s in ("bump erfolgreich!", "bump done!")):
-            return True
-    return False
+    return any(
+        any(t in (embed.description or "").lower() for t in BUMP_TEXTS)
+        for embed in message.embeds
+    )
 
 
 class BumpReminder(commands.Cog):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
-        self.lock = asyncio.Lock()
-        # Fehler im Reminder nur einmal loggen statt alle 15 s.
-        self.error_logged = False
-        # Zeitpunkt des nächsten Pings im Speicher, die DB nur bei Änderungen.
-        self.due = load_bump_due(BUMP_CHANNEL_ID)
+        self.timers: dict[int, asyncio.Task] = {}   # channel_id -> laufender Timer
+        self.pending: dict[str, float] = {}         # channel_id (str) -> Fälligkeit als Unix-Timestamp
+        self.restored = False                       # on_ready kann bei Reconnects mehrfach feuern
 
-    def log_error_once(self, text: str, exc_info: bool = False):
-        if not self.error_logged:
-            log.error(text, exc_info=exc_info)
-            self.error_logged = True
+    async def cog_unload(self) -> None:
+        for task in self.timers.values():
+            task.cancel()
 
-    async def cog_load(self):
-        self.remind.start()
+    def save_pending(self) -> None:
+        # Atomar schreiben: erst in Temp-Datei, dann ersetzen -> keine halbe Datei bei Absturz
+        tmp = STATE_FILE.with_name(STATE_FILE.name + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(self.pending, f)
+        os.replace(tmp, STATE_FILE)
 
-    async def cog_unload(self):
-        task = self.remind.get_task()
-        self.remind.cancel()
-        if task is not None:
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+    async def remind(self, channel_id: int, due: float) -> None:
+        await asyncio.sleep(max(0, due - time.time()))
+        try:
+            channel = self.bot.get_channel(channel_id) or await self.bot.fetch_channel(channel_id)
+            await channel.send(
+                    f"-# ||<@&{BUMP_PING_ROLE_ID}>||\n"
+                        "**hii  {user}  ,  can  u  </bump:947088344167366698>  the  server  ?**"
+                        "<a:lunaRpalace:1532899201590235347>",
+                allowed_mentions=discord.AllowedMentions(roles=True),
+            )
+        except discord.HTTPException as e:
+            log.warning("Reminder für Channel %s fehlgeschlagen: %s", channel_id, e)
+        finally:
+            self.timers.pop(channel_id, None)
+            self.pending.pop(str(channel_id), None)
+            self.save_pending()
 
-    async def register_bump(self, message: discord.Message):
-        if not is_success(message):
+    def schedule(self, channel_id: int, due: float) -> None:
+        old = self.timers.pop(channel_id, None)
+        if old:
+            old.cancel()
+        self.pending[str(channel_id)] = due
+        self.save_pending()
+        self.timers[channel_id] = asyncio.create_task(self.remind(channel_id, due))
+
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        if self.restored:
             return
-        due = message.created_at.timestamp() + BUMP_INTERVAL_SECONDS
-        async with self.lock:
-            is_new = save_bump(BUMP_CHANNEL_ID, message.id, due)
-            if is_new:
-                self.due = due
-        # Nur einmal pro Bump danken, auch wenn Send- und Edit-Event kommen.
-        if is_new:
-            await self.send_thanks(message, due)
+        self.restored = True
+        for channel_id, due in load_pending().items():
+            self.schedule(int(channel_id), due)
+            log.info("Timer wiederhergestellt: Channel %s", channel_id)
 
-    async def send_thanks(self, message: discord.Message, due: float):
-        # DISBOARD antwortet auf /bump, darüber kennen wir den Bumper.
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if not is_bump_success(message):
+            return
+        self.schedule(message.channel.id, time.time() + BUMP_INTERVAL_SECONDS)
+        log.info("Timer gestartet für Channel %s", message.channel.id)
+
+        # Wer /bump ausgeführt hat, steht in den Interaction-Daten der Disboard-Antwort
         metadata = message.interaction_metadata
-        user = metadata.user if metadata is not None else None
+        if metadata is None:
+            return
         try:
             await message.channel.send(
-                THANKS_MESSAGE.format(
-                    user=f"  ,  {user.mention}" if user is not None else "",
-                    due=int(due)),
-                allowed_mentions=discord.AllowedMentions(
-                    everyone=False, roles=False,
-                    users=[user] if user is not None else False),
+                THANKS_MESSAGE.format(user=metadata.user.mention),
+                allowed_mentions=discord.AllowedMentions(users=True),
             )
-        except discord.HTTPException:
-            log.exception("Danke-Nachricht konnte nicht gesendet werden")
-
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
-        await self.register_bump(message)
-
-    @commands.Cog.listener()
-    async def on_raw_message_edit(self, payload: discord.RawMessageUpdateEvent):
-        # Antworten auf Slash-Commands bekommen ihr Embed oft erst per Edit.
-        if payload.channel_id != BUMP_CHANNEL_ID or "embeds" not in payload.data:
-            return
-        # Nur DISBOARD-Nachrichten nachladen, nicht jede Edit im Kanal.
-        author_id = payload.data.get("author", {}).get("id")
-        if author_id is not None and int(author_id) != DISBOARD_BOT_ID:
-            return
-        try:
-            channel = self.bot.get_channel(BUMP_CHANNEL_ID)
-            if channel is None:
-                channel = await self.bot.fetch_channel(BUMP_CHANNEL_ID)
-            await self.register_bump(await channel.fetch_message(payload.message_id))
-        except discord.HTTPException:
-            log.exception("DISBOARD-Nachricht konnte nicht geladen werden")
-
-    @tasks.loop(seconds=15)
-    async def remind(self):
-        if not self.bot.is_ready():
-            return
-        async with self.lock:
-            if self.due is None or self.due > time.time():
-                return
-            try:
-                channel = self.bot.get_channel(BUMP_CHANNEL_ID)
-                if channel is None:
-                    channel = await self.bot.fetch_channel(BUMP_CHANNEL_ID)
-                role = channel.guild.get_role(BUMP_PING_ROLE_ID)
-                if role is None or role.is_default():
-                    self.log_error_once(
-                        "BUMP_PING_ROLE_ID muss eine existierende Rolle sein (nicht @everyone)")
-                    return
-                await channel.send(
-                    REMINDER_MESSAGE.format(role=role.mention),
-                    allowed_mentions=discord.AllowedMentions(
-                        everyone=False, users=False, roles=[role], replied_user=False),
-                )
-            except discord.HTTPException:
-                self.log_error_once(
-                    "Reminder konnte nicht gesendet werden; neuer Versuch alle 15 s",
-                    exc_info=True)
-                return
-            self.error_logged = False
-            # Nur ein Ping pro Bump, der nächste Timer startet mit dem nächsten Bump.
-            self.due = None
-            set_bump_due(BUMP_CHANNEL_ID, None)
-
-    @remind.before_loop
-    async def before_remind(self):
-        await self.bot.wait_until_ready()
+        except discord.HTTPException as e:
+            log.warning("Dank-Nachricht in Channel %s fehlgeschlagen: %s", message.channel.id, e)
 
 
-async def setup(bot: commands.Bot):
-    if BUMP_CHANNEL_ID <= 0 or BUMP_PING_ROLE_ID <= 0:
-        # Nicht abbrechen, sonst startet der ganze Bot nicht.
-        log.warning("Bump-Reminder deaktiviert: BUMP_CHANNEL_ID und BUMP_PING_ROLE_ID "
-                    "in config.py eintragen.")
-        return
-    if not bot.intents.message_content:
-        raise ValueError("Der Bot benötigt intents.message_content = True.")
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(BumpReminder(bot))
