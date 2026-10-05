@@ -256,7 +256,7 @@ class SelfRoles(commands.Cog):
     async def selfrole_setup(self, ctx: commands.Context) -> None:
         file = discord.File(EMBED_GIF_PATH, filename="gif.gif")
         await ctx.channel.send(embed=build_selfroles_embed(), file=file, view=RoleView01())
-        await ctx.channel.send(SECOND_MESSAGE, view=RoleView02())
+        await ctx.channel.send(view=RoleView02())
         try:
             await ctx.message.delete()
         except discord.HTTPException:
