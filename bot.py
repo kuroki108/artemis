@@ -19,6 +19,8 @@ intents.members = True
 bot = commands.Bot(
     command_prefix=".",
     intents=intents,
+    # Ohne Timeout würde discord.py bei Rate-Limits (z. B. Umbenennen) bis zu 10 Minuten still warten
+    max_ratelimit_timeout=30,
     activity=discord.CustomActivity(name="⟣ 🪽 lunaR palace ₊ ⊹")
 )
 
