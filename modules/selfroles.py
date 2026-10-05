@@ -13,10 +13,13 @@ EMBED_GIF_PATH = Path(__file__).resolve().parent.parent / "assets" / "gif.gif"
 EMBED_IMAGE_URL = "attachment://gif.gif"
 EMBED_COLOR = discord.Color.purple()
 EMBED_DESC = (
-    "# Self-Roles\n\n"
-    "Hier kannst du dir mit einem Klick deine Rollen auswählen! Wähle z.B. dein Alter, deine Lieblingsspiele oder Ping-Rollen, damit andere Mitglieder gleich sehen können, was zu dir passt. Keine Sorge, du kannst deine Rollen jederzeit ändern oder entfernen."
+    "# <:lunaRpalace:1556779035256950856> Self-Roles\n\n"
+    "Hier kannst du dir mit einem Klick deine Rollen auswählen! \n " 
+    "Wähle z.B. dein Alter, deine Lieblingsspiele oder Ping-Rollen, damit andere Mitglieder gleich sehen können, was zu dir passt.\n\n" 
+    "-# Keine Sorge, du kannst deine Rollen jederzeit ändern oder entfernen."
 )
-SECOND_MESSAGE = "-# Interessen, Spiele & Pings"
+# Discord verlangt Inhalt, daher ein unsichtbares Zeichen statt Text
+SECOND_MESSAGE = "​"
 
 ERROR_MESSAGE = "Da ist etwas schiefgelaufen. Versuch es gleich nochmal."
 FORBIDDEN_MESSAGE = "Ich darf dir die Rolle nicht geben (fehlende Rechte). Bitte melde dich beim Team."
@@ -33,12 +36,6 @@ def build_selfroles_embed() -> discord.Embed:
 
 
 class RoleSelect(discord.ui.Select):
-    """Auswahlmenü für eine Rollen-Kategorie.
-
-    Einzelauswahl: Die gewählte Rolle ersetzt die bisherige der Kategorie, nochmaliges
-    Wählen der eigenen Rolle entfernt sie. Mehrfachauswahl (`multi`): Jede gewählte Rolle
-    wird umgeschaltet (vorhanden -> entfernt, fehlt -> vergeben), alle anderen bleiben.
-    """
 
     multi: bool = False
 
@@ -237,8 +234,6 @@ class RoleView01(discord.ui.View):
 
 
 class RoleView02(discord.ui.View):
-    """Zweite Nachricht: Interessen, Spiele, Pings."""
-
     def __init__(self) -> None:
         super().__init__(timeout=None)
         self.add_item(InterestsRoles())
@@ -259,7 +254,6 @@ class SelfRoles(commands.Cog):
     @commands.guild_only()
     @commands.has_permissions(administrator=True)
     async def selfrole_setup(self, ctx: commands.Context) -> None:
-        """Postet die Self-Role-Menüs in diesen Channel (.selfrole-setup)."""
         file = discord.File(EMBED_GIF_PATH, filename="gif.gif")
         await ctx.channel.send(embed=build_selfroles_embed(), file=file, view=RoleView01())
         await ctx.channel.send(SECOND_MESSAGE, view=RoleView02())
