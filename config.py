@@ -43,7 +43,7 @@ GIVEAWAY_CHECK_SECONDS = 15
 VC_MASTER = "<a:lunaRpalace:1533125760884281355>"
 # Pfeil vor den Einträgen im Interface-Embed.
 VC_MASTER_ARROW = "<:lunaRpalace:1541211249797242881>"
-# Emojis vor den Aktionen im Interface-Embed (Custom-Emoji immer mit ID: "<:name:id>").
+# Emojis auf den Buttons des Interfaces (Custom-Emoji immer mit ID: "<:name:id>").
 VC_MASTER_LOCK_EMOJI = "<:lunaRpalace:1556771278742888508>"
 VC_MASTER_UNLOCK_EMOJI = "<:lunaRpalace:1556771298334613544>"
 VC_MASTER_CLAIM_EMOJI = "<:lunaRpalace:1529889987204743249>"
