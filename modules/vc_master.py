@@ -25,36 +25,21 @@ EMBED_COLOR = 0xFFFFFF
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
-# Einträge im Interface-Embed (Emoji, Name, Text), untereinander, in der Reihenfolge der Buttons
-ENTRIES = [
-    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
-    "-# _ _",
-    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
-    "-# _ _",
-    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
-    "-# _ _",
-    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
-    "-# _ _",
-    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
-    "-# _ _",
-]
-
-
-def _column(entries: list[tuple[str, str, str]]) -> str:
-    return "\n".join(f"{emoji} `{name}` {text}" for emoji, name, text in entries)
-
 
 def interface_embed(guild: discord.Guild) -> discord.Embed:
     link = f"https://discord.com/channels/{guild.id}/{VC_MASTER_CREATE_CHANNEL_ID}"
     embed = discord.Embed(
         description=(
             f"# {VC_MASTER} __VoiceMaster Interface__\n"
-            f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen."
+            f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen.\n\n"
+            f"{VC_MASTER_LOCK_EMOJI} `lock` the voice channel\n-# _ _\n"
+            f"{VC_MASTER_UNLOCK_EMOJI} `unlock` the voice channel\n-# _ _\n"
+            f"{VC_MASTER_DISCONNECT_EMOJI} `disconnect` a member\n-# _ _\n"
+            f"{VC_MASTER_LIMIT_EMOJI} `change` user limit\n-# _ _\n"
+            f"{VC_MASTER_RENAME_EMOJI} `rename` the voice channel\n-# _ _\n"
         ),
         color=EMBED_COLOR,
     )
-    embed.add_field(name="​", value=_column(ENTRIES), inline=False)
-    # Das Bild trennt Liste und Hinweis; der Footer steht in Discord unter dem Bild
     embed.set_image(url=f"attachment://{SEPARATOR_PATH.name}")
     embed.set_footer(text="Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.")
     return embed
