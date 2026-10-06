@@ -26,13 +26,11 @@ EMBED_COLOR = 0xFFFFFF
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
-# Einträge im Interface-Embed (Name, Text), links / rechts, genau wie die Buttons
-LEFT_COLUMN = [
+# Einträge im Interface-Embed (Name, Text), untereinander, in der Reihenfolge der Buttons
+ENTRIES = [
     ("lock", "the voice channel"),
     ("unlock", "the voice channel"),
     ("disconnect", "a member"),
-]
-RIGHT_COLUMN = [
     ("change", "user limit"),
     ("rename", "the voice channel"),
 ]
@@ -51,8 +49,7 @@ def interface_embed(guild: discord.Guild) -> discord.Embed:
         ),
         color=EMBED_COLOR,
     )
-    embed.add_field(name="​", value=_column(LEFT_COLUMN), inline=True)
-    embed.add_field(name="​", value=_column(RIGHT_COLUMN), inline=True)
+    embed.add_field(name="​", value=_column(ENTRIES), inline=False)
     # Das Bild trennt Liste und Hinweis; der Footer steht in Discord unter dem Bild
     embed.set_image(url=f"attachment://{SEPARATOR_PATH.name}")
     embed.set_footer(text="Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.")
