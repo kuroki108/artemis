@@ -12,7 +12,6 @@ from config import (
     VC_MASTER_ALWAYS_ROLE_IDS,
     VC_MASTER_ARROW,
     VC_MASTER_CATEGORY_ID,
-    VC_MASTER_CLAIM_EMOJI,
     VC_MASTER_CREATE_CHANNEL_ID,
     VC_MASTER_DISCONNECT_EMOJI,
     VC_MASTER_LIMIT_EMOJI,
@@ -23,8 +22,7 @@ from config import (
 
 log = logging.getLogger(__name__)
 
-EMBED_COLOR = 0x2B2D31
-# Über __file__ aufgelöst, damit der Pfad unabhängig vom CWD stimmt
+EMBED_COLOR = 0xFFFFFF
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
@@ -32,10 +30,9 @@ MAX_LIMIT = 99
 LEFT_COLUMN = [
     ("lock", "the voice channel"),
     ("unlock", "the voice channel"),
-    ("claim", "the voice channel"),
+    ("disconnect", "a member"),
 ]
 RIGHT_COLUMN = [
-    ("disconnect", "a member"),
     ("change", "user limit"),
     ("rename", "the voice channel"),
 ]
@@ -70,9 +67,7 @@ async def reply(interaction: discord.Interaction, text: str) -> None:
     await interaction.response.send_message(embed=reply_embed(text), ephemeral=True)
 
 
-async def get_vc(
-    interaction: discord.Interaction, *, owner_only: bool = True
-) -> discord.VoiceChannel | None:
+async def get_vc(interaction: discord.Interaction) -> discord.VoiceChannel | None:
     """Sprachkanal des Users, falls vom VoiceMaster verwaltet (und ihm gehörend). Antwortet sonst selbst."""
     member = interaction.user
     voice = member.voice if isinstance(member, discord.Member) else None
@@ -85,7 +80,7 @@ async def get_vc(
     if owner_id is None:
         await reply(interaction, "Dieser Kanal wird nicht vom VoiceMaster verwaltet.")
         return None
-    if owner_only and owner_id != member.id:
+    if owner_id != member.id:
         await reply(interaction, f"Nur <@{owner_id}> kann diesen Kanal verwalten.")
         return None
     return channel
@@ -202,20 +197,6 @@ class VoiceInterface(discord.ui.View):
         everyone.connect = None
         await channel.set_permissions(interaction.guild.default_role, overwrite=everyone)
         await reply(interaction, f"{channel.mention} wurde entsperrt.")
-
-    @discord.ui.button(emoji=VC_MASTER_CLAIM_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:claim")
-    async def claim(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
-        channel = await get_vc(interaction, owner_only=False)
-        if channel is None:
-            return
-        owner_id = database.load_vc_owner(channel.id)
-        if owner_id == interaction.user.id:
-            await reply(interaction, "Der Kanal gehört dir bereits.")
-        elif any(m.id == owner_id for m in channel.members):
-            await reply(interaction, f"<@{owner_id}> ist noch im Kanal.")
-        else:
-            database.save_vc_channel(channel.id, interaction.user.id)
-            await reply(interaction, f"{channel.mention} gehört jetzt dir.")
 
     @discord.ui.button(emoji=VC_MASTER_DISCONNECT_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect")
     async def disconnect(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:

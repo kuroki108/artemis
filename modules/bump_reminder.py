@@ -16,7 +16,7 @@ BUMP_TEXTS = ("bump erfolgreich!", "bump done")
 
 # Dank an den Bumper; {user} wird zur Erwähnung, {due} zum Unix-Timestamp des nächsten Bumps.
 THANKS_MESSAGE = (
-    "**tysm{user}**  <a:lunaRpalace:1532899555715055616>\n"
+    "**tysm  ,  {user}**  <a:lunaRpalace:1532899555715055616>\n"
     "**next bump in  <t:{due}:R>  (ᴗ͈ˬᴗ͈)ഒ**"
 )
 
