@@ -27,11 +27,11 @@ MAX_LIMIT = 99
 
 # Einträge im Interface-Embed (Emoji, Name, Text), untereinander, in der Reihenfolge der Buttons
 ENTRIES = [
-    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
-    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
-    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
-    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
-    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
+    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel\n"),
+    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel\n"),
+    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member\n"),
+    (VC_MASTER_LIMIT_EMOJI, "change", "user limit\n"),
+    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel\n"),
 ]
 
 
@@ -64,7 +64,6 @@ async def reply(interaction: discord.Interaction, text: str) -> None:
 
 
 async def get_vc(interaction: discord.Interaction) -> discord.VoiceChannel | None:
-    """Sprachkanal des Users, falls vom VoiceMaster verwaltet (und ihm gehörend). Antwortet sonst selbst."""
     member = interaction.user
     voice = member.voice if isinstance(member, discord.Member) else None
     if voice is None or not isinstance(voice.channel, discord.VoiceChannel):
