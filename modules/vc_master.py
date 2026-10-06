@@ -272,6 +272,8 @@ class VcMaster(commands.Cog):
         for role_id in VC_MASTER_ALWAYS_ROLE_IDS:
             if (role := member.guild.get_role(role_id)) is not None:
                 overwrites[role] = discord.PermissionOverwrite(connect=True, view_channel=True)
+        # Der Ersteller muss seinen Kanal immer sehen und betreten dürfen, sonst scheitert das Verschieben
+        overwrites[member] = discord.PermissionOverwrite(connect=True, view_channel=True)
         try:
             channel = await member.guild.create_voice_channel(
                 name=f"⊹ {member.display_name}'s vc",
@@ -286,8 +288,12 @@ class VcMaster(commands.Cog):
         try:
             await member.move_to(channel)
         except discord.HTTPException:
-            # Der User ist schon wieder weg: leeren Kanal nicht liegen lassen
-            await channel.delete(reason="VoiceMaster: User nicht verschiebbar")
+            # Meist ist der User schon wieder weg, sonst fehlen dem Bot Rechte (z. B. "Mitglieder verschieben")
+            log.exception("%s konnte nicht in den neuen Kanal verschoben werden", member)
+            try:
+                await channel.delete(reason="VoiceMaster: User nicht verschiebbar")
+            except discord.HTTPException:
+                log.exception("Löschen von %s fehlgeschlagen", channel.id)
             database.delete_vc_channel(channel.id)
 
     @commands.command(name="vc-setup")
