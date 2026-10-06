@@ -277,7 +277,7 @@ class VcMaster(commands.Cog):
                     await before.channel.delete(reason="VoiceMaster: Kanal leer")
                 except discord.NotFound:
                     pass
-                except discord.HTTPException:
+                except (discord.HTTPException, discord.RateLimited):
                     # Eintrag bleibt, damit das Aufräumen beim nächsten Start es erneut versucht
                     log.exception("Löschen von %s fehlgeschlagen", before.channel.id)
                     return
@@ -285,6 +285,7 @@ class VcMaster(commands.Cog):
                 await vc_log(self.bot, f"**{before.channel.name}** wurde gelöscht, weil alle den Kanal verlassen haben.")
 
     async def create_channel(self, member: discord.Member, trigger: discord.VoiceChannel) -> None:
+        log.info("Erstelle Kanal für %s", member)
         category = (
             member.guild.get_channel(VC_MASTER_CATEGORY_ID) if VC_MASTER_CATEGORY_ID else trigger.category
         )
@@ -302,6 +303,11 @@ class VcMaster(commands.Cog):
                 overwrites=overwrites,
                 reason=f"VoiceMaster: Kanal für {member}",
             )
+        except discord.RateLimited as e:
+            # Discord begrenzt das Erstellen von Kanälen pro Tag; discord.py wirft hier sofort statt zu warten
+            log.warning("Kanal für %s nicht erstellt: Rate-Limit, nächster Versuch in %d Min.", member, e.retry_after // 60)
+            await vc_log(self.bot, f"Kanal für {member.mention} nicht erstellt: Discord-Limit für neue Kanäle erreicht (wieder möglich in ca. {int(e.retry_after // 3600) + 1} Std.).")
+            return
         except discord.HTTPException:
             log.exception("Kanal für %s konnte nicht erstellt werden", member)
             return
@@ -314,7 +320,7 @@ class VcMaster(commands.Cog):
             log.exception("%s konnte nicht in den neuen Kanal verschoben werden", member)
             try:
                 await channel.delete(reason="VoiceMaster: User nicht verschiebbar")
-            except discord.HTTPException:
+            except (discord.HTTPException, discord.RateLimited):
                 log.exception("Löschen von %s fehlgeschlagen", channel.id)
             database.delete_vc_channel(channel.id)
 
