@@ -15,6 +15,7 @@ from config import (
     VC_MASTER_DISCONNECT_EMOJI,
     VC_MASTER_LIMIT_EMOJI,
     VC_MASTER_LOCK_EMOJI,
+    VC_MASTER_LOG_CHANNEL_ID,
     VC_MASTER_RENAME_EMOJI,
     VC_MASTER_UNLOCK_EMOJI,
 )
@@ -59,6 +60,16 @@ def reply_embed(text: str) -> discord.Embed:
     return discord.Embed(description=text, color=EMBED_COLOR)
 
 
+async def vc_log(client: discord.Client, text: str) -> None:
+    if not VC_MASTER_LOG_CHANNEL_ID:
+        return
+    try:
+        channel = client.get_channel(VC_MASTER_LOG_CHANNEL_ID) or await client.fetch_channel(VC_MASTER_LOG_CHANNEL_ID)
+        await channel.send(text, allowed_mentions=discord.AllowedMentions.none())
+    except discord.HTTPException as e:
+        log.warning("VoiceMaster-Log fehlgeschlagen: %s", e)
+
+
 async def reply(interaction: discord.Interaction, text: str) -> None:
     await interaction.response.send_message(embed=reply_embed(text), ephemeral=True)
 
@@ -100,6 +111,7 @@ class LimitModal(discord.ui.Modal, title="User-Limit ändern"):
         await self.channel.edit(user_limit=new_limit)
         text = "unbegrenzt" if new_limit == 0 else str(new_limit)
         await reply(interaction, f"{self.channel.mention} hat jetzt ein Limit von **{text}**.")
+        await vc_log(interaction.client, f"{interaction.user.mention} hat das Limit von {self.channel.mention} auf **{text}** gesetzt.")
 
 
 class RenameModal(discord.ui.Modal, title="Kanal umbenennen"):
@@ -112,8 +124,10 @@ class RenameModal(discord.ui.Modal, title="Kanal umbenennen"):
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
         await interaction.response.defer(ephemeral=True, thinking=True)
+        old_name = self.channel.name
+        new_name = self.name.value.strip()
         try:
-            await self.channel.edit(name=self.name.value.strip())
+            await self.channel.edit(name=new_name)
         except discord.RateLimited as e:
             # Discord erlaubt nur 2 Umbenennungen pro 10 Minuten
             await interaction.followup.send(
@@ -129,8 +143,9 @@ class RenameModal(discord.ui.Modal, title="Kanal umbenennen"):
             )
             return
         await interaction.followup.send(
-            embed=reply_embed(f"Kanal umbenannt in **{self.channel.name}**."), ephemeral=True
+            embed=reply_embed(f"Kanal umbenannt in **{new_name}**."), ephemeral=True
         )
+        await vc_log(interaction.client, f"{interaction.user.mention} hat **{old_name}** in {self.channel.mention} (**{new_name}**) umbenannt.")
 
 
 class DisconnectSelect(discord.ui.UserSelect):
@@ -153,6 +168,7 @@ class DisconnectSelect(discord.ui.UserSelect):
             await interaction.response.edit_message(
                 embed=reply_embed(f"{target.mention} wurde getrennt."), view=None
             )
+            await vc_log(interaction.client, f"{interaction.user.mention} hat {target.mention} aus {self.channel.mention} getrennt.")
 
 
 class PickerView(discord.ui.View):
@@ -182,6 +198,7 @@ class VoiceInterface(discord.ui.View):
         owner.connect = True
         await channel.set_permissions(interaction.user, overwrite=owner)
         await reply(interaction, f"{channel.mention} wurde gesperrt.")
+        await vc_log(interaction.client, f"{interaction.user.mention} hat {channel.mention} gesperrt.")
 
     @discord.ui.button(emoji=VC_MASTER_UNLOCK_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:unlock")
     async def unlock(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
@@ -192,6 +209,7 @@ class VoiceInterface(discord.ui.View):
         everyone.connect = None
         await channel.set_permissions(interaction.guild.default_role, overwrite=everyone)
         await reply(interaction, f"{channel.mention} wurde entsperrt.")
+        await vc_log(interaction.client, f"{interaction.user.mention} hat {channel.mention} entsperrt.")
 
     @discord.ui.button(emoji=VC_MASTER_DISCONNECT_EMOJI, style=discord.ButtonStyle.secondary, custom_id="vcmaster:disconnect")
     async def disconnect(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
@@ -260,8 +278,11 @@ class VcMaster(commands.Cog):
                 except discord.NotFound:
                     pass
                 except discord.HTTPException:
+                    # Eintrag bleibt, damit das Aufräumen beim nächsten Start es erneut versucht
                     log.exception("Löschen von %s fehlgeschlagen", before.channel.id)
+                    return
                 database.delete_vc_channel(before.channel.id)
+                await vc_log(self.bot, f"**{before.channel.name}** wurde gelöscht, weil alle den Kanal verlassen haben.")
 
     async def create_channel(self, member: discord.Member, trigger: discord.VoiceChannel) -> None:
         category = (
@@ -285,6 +306,7 @@ class VcMaster(commands.Cog):
             log.exception("Kanal für %s konnte nicht erstellt werden", member)
             return
         database.save_vc_channel(channel.id, member.id)
+        await vc_log(self.bot, f"{member.mention} hat {channel.mention} erstellt.")
         try:
             await member.move_to(channel)
         except discord.HTTPException:
