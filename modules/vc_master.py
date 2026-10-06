@@ -32,11 +32,11 @@ def interface_embed(guild: discord.Guild) -> discord.Embed:
         description=(
             f"# {VC_MASTER} __VoiceMaster Interface__\n"
             f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen.\n\n"
-            f"{VC_MASTER_LOCK_EMOJI} `lock` the voice channel\n-# _ _\n"
-            f"{VC_MASTER_UNLOCK_EMOJI} `unlock` the voice channel\n-# _ _\n"
-            f"{VC_MASTER_DISCONNECT_EMOJI} `disconnect` a member\n-# _ _\n"
-            f"{VC_MASTER_LIMIT_EMOJI} `change` user limit\n-# _ _\n"
-            f"{VC_MASTER_RENAME_EMOJI} `rename` the voice channel\n-# _ _\n"
+            f"{VC_MASTER_LOCK_EMOJI} `lock` the voice channel\n""-# _ _\n"
+            f"{VC_MASTER_UNLOCK_EMOJI} `unlock` the voice channel\n""-# _ _\n"
+            f"{VC_MASTER_DISCONNECT_EMOJI} `disconnect` a member\n""-# _ _\n"
+            f"{VC_MASTER_LIMIT_EMOJI} `change` user limit\n""-# _ _\n"
+            f"{VC_MASTER_RENAME_EMOJI} `rename` the voice channel\n""-# _ _\n"
         ),
         color=EMBED_COLOR,
     )
