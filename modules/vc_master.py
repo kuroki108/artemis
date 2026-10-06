@@ -26,20 +26,30 @@ SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interfa
 MAX_LIMIT = 99
 
 
+# Einträge im Interface-Embed (Emoji, Name, Text), untereinander, in der Reihenfolge der Buttons
+ENTRIES = [
+    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
+    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
+    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
+    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
+    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
+]
+
+
+def _column(entries: list[tuple[str, str, str]]) -> str:
+    return "\n".join(f"{emoji} `{name}` {text}" for emoji, name, text in entries)
+
+
 def interface_embed(guild: discord.Guild) -> discord.Embed:
     link = f"https://discord.com/channels/{guild.id}/{VC_MASTER_CREATE_CHANNEL_ID}"
     embed = discord.Embed(
         description=(
             f"# {VC_MASTER} __VoiceMaster Interface__\n"
-            f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen.\n\n"
-            f"{VC_MASTER_LOCK_EMOJI} `lock` the voice channel"
-            f"{VC_MASTER_UNLOCK_EMOJI} `unlock` the voice channel"
-            f"{VC_MASTER_DISCONNECT_EMOJI} `disconnect` a member"
-            f"{VC_MASTER_LIMIT_EMOJI} `change` user limit"
-            f"{VC_MASTER_RENAME_EMOJI} `rename` the voice channel"
+            f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen."
         ),
         color=EMBED_COLOR,
     )
+    embed.add_field(name="​", value=_column(ENTRIES), inline=False)
     embed.set_image(url=f"attachment://{SEPARATOR_PATH.name}")
     embed.set_footer(text="Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.")
     return embed
