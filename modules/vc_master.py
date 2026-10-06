@@ -10,7 +10,6 @@ import database
 from config import (
     VC_MASTER,
     VC_MASTER_ALWAYS_ROLE_IDS,
-    VC_MASTER_ARROW,
     VC_MASTER_CATEGORY_ID,
     VC_MASTER_CREATE_CHANNEL_ID,
     VC_MASTER_DISCONNECT_EMOJI,
@@ -26,18 +25,18 @@ EMBED_COLOR = 0xFFFFFF
 SEPARATOR_PATH = Path(__file__).resolve().parent.parent / "assets" / "vc-interface.jpg"
 MAX_LIMIT = 99
 
-# Einträge im Interface-Embed (Name, Text), untereinander, in der Reihenfolge der Buttons
+# Einträge im Interface-Embed (Emoji, Name, Text), untereinander, in der Reihenfolge der Buttons
 ENTRIES = [
-    ("lock", "the voice channel"),
-    ("unlock", "the voice channel"),
-    ("disconnect", "a member"),
-    ("change", "user limit"),
-    ("rename", "the voice channel"),
+    (VC_MASTER_LOCK_EMOJI, "lock", "the voice channel"),
+    (VC_MASTER_UNLOCK_EMOJI, "unlock", "the voice channel"),
+    (VC_MASTER_DISCONNECT_EMOJI, "disconnect", "a member"),
+    (VC_MASTER_LIMIT_EMOJI, "change", "user limit"),
+    (VC_MASTER_RENAME_EMOJI, "rename", "the voice channel"),
 ]
 
 
-def _column(entries: list[tuple[str, str]]) -> str:
-    return "\n".join(f"{VC_MASTER_ARROW} `{name}` {text}" for name, text in entries)
+def _column(entries: list[tuple[str, str, str]]) -> str:
+    return "\n".join(f"{emoji} `{name}` {text}" for emoji, name, text in entries)
 
 
 def interface_embed(guild: discord.Guild) -> discord.Embed:
