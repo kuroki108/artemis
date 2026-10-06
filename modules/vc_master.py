@@ -33,15 +33,10 @@ def interface_embed(guild: discord.Guild) -> discord.Embed:
             f"# {VC_MASTER} __VoiceMaster Interface__\n"
             f"<:lunaRpalace:1536504134457499648> Klick [hier]({link}) um einen VC zu erstellen.\n\n"
             f"{VC_MASTER_LOCK_EMOJI} `lock` the voice channel"
-            "<:lunaRpalace:1534757116613627956>\n"
             f"{VC_MASTER_UNLOCK_EMOJI} `unlock` the voice channel"
-            "<:lunaRpalace:1534757116613627956>\n"
             f"{VC_MASTER_DISCONNECT_EMOJI} `disconnect` a member"
-            "<:lunaRpalace:1534757116613627956>\n"
             f"{VC_MASTER_LIMIT_EMOJI} `change` user limit"
-            "<:lunaRpalace:1534757116613627956>\n"
             f"{VC_MASTER_RENAME_EMOJI} `rename` the voice channel"
-            "<:lunaRpalace:1534757116613627956>\n"
         ),
         color=EMBED_COLOR,
     )
@@ -269,7 +264,7 @@ class VcMaster(commands.Cog):
                 overwrites[role] = discord.PermissionOverwrite(connect=True, view_channel=True)
         try:
             channel = await member.guild.create_voice_channel(
-                name=f"{member.display_name}'s VC",
+                name=f"⊹ {member.display_name}'s vc",
                 category=category,
                 overwrites=overwrites,
                 reason=f"VoiceMaster: Kanal für {member}",
