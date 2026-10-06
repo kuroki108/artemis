@@ -13,13 +13,11 @@ EMBED_GIF_PATH = Path(__file__).resolve().parent.parent / "assets" / "gif.gif"
 EMBED_IMAGE_URL = "attachment://gif.gif"
 EMBED_COLOR = discord.Color.purple()
 EMBED_DESC = (
-    "# <:lunaRpalace:1556779035256950856> Self-Roles\n\n"
-    "Hier kannst du dir mit einem Klick deine Rollen auswählen! \n " 
+    "# <:lunaRpalace:1556779035256950856> __Self-Roles__\n\n\n"
+    "Hier kannst du dir mit einem Klick deine Rollen auswählen! \n\n" 
     "Wähle z.B. dein Alter, deine Lieblingsspiele oder Ping-Rollen, damit andere Mitglieder gleich sehen können, was zu dir passt.\n\n" 
     "-# Keine Sorge, du kannst deine Rollen jederzeit ändern oder entfernen."
 )
-# Discord verlangt Inhalt, daher ein unsichtbares Zeichen statt Text
-SECOND_MESSAGE = "​"
 
 ERROR_MESSAGE = "Da ist etwas schiefgelaufen. Versuch es gleich nochmal."
 FORBIDDEN_MESSAGE = "Ich darf dir die Rolle nicht geben (fehlende Rechte). Bitte melde dich beim Team."
