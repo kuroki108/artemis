@@ -300,6 +300,32 @@ def load_vc_owner(channel_id: int) -> int | None:
         connection.close()
 
 
+def load_vc_channel_ids_by_owner(owner_id: int) -> list[int]:
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            rows = connection.execute(
+                "SELECT channel_id FROM vc_master_channels WHERE owner_id = ?",
+                (owner_id,),
+            ).fetchall()
+        return [row[0] for row in rows]
+    finally:
+        connection.close()
+
+
+def load_vc_channels() -> dict[int, int]:
+    """Alle VoiceMaster-Kanäle als {channel_id: owner_id}."""
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        with connection:
+            _create_vc_table(connection)
+            rows = connection.execute("SELECT channel_id, owner_id FROM vc_master_channels").fetchall()
+        return dict(rows)
+    finally:
+        connection.close()
+
+
 def load_vc_channel_ids() -> list[int]:
     connection = sqlite3.connect(DATABASE_PATH)
     try:
