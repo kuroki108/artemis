@@ -55,3 +55,12 @@ VC_MASTER_CATEGORY_ID = 0
 VC_MASTER_ALWAYS_ROLE_IDS: list[int] = [1509590685140127830] #Management
 
 VC_MASTER_LOG_CHANNEL_ID = 1509590686209540106
+
+# Mindestabstand zwischen zwei neuen Kanälen pro Nutzer.
+VC_MASTER_COOLDOWN_SECONDS = 120
+# Leere Kanäle werden erst nach dieser Zeit gelöscht (wer zurückkommt, behält ihn).
+VC_MASTER_EMPTY_DELETE_SECONDS = 60
+# Intervall, in dem nach abgelaufenen leeren Kanälen gesucht wird.
+VC_MASTER_CHECK_SECONDS = 30
+# So lange behält ein Besitzer seinen Kanal, nachdem er ihn verlassen hat (z. B. kurzer Verbindungsabbruch), bevor ihn jemand anderes bekommt.
+VC_MASTER_OWNER_GRACE_SECONDS = 60
