@@ -14,7 +14,7 @@ EMBED_IMAGE_URL = "attachment://gif.gif"
 EMBED_COLOR = color=discord.Color.light_embed()
 EMBED_DESC = (
     "# <:lunaRpalace:1556779035256950856> __SELF-ROLES__\n\n"
-    "_ _"
+    "_ _\n"
     "Hier kannst du dir mit einem Klick deine Rollen auswählen! \n\n" 
     "Wähle z.B. dein Alter, deine Lieblingsspiele oder Ping-Rollen, damit andere Mitglieder gleich sehen können, was zu dir passt.\n\n" 
     "-# Keine Sorge, du kannst deine Rollen jederzeit ändern oder entfernen.\n"
