@@ -120,7 +120,7 @@ class GenderRoles(RoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_gender",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ ABOUT ME",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ ABOUT ME",
             options=[
                 discord.SelectOption(label="彡 girl",           value="1509590685106438232"),
                 discord.SelectOption(label="彡 boy",          value="1509590685106438231"),
@@ -134,7 +134,7 @@ class AgeRoles(RoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_age",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ AGE",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ AGE",
             options=[
                 discord.SelectOption(label="彡 age 16-18",          value="1509590685106438227"),
                 discord.SelectOption(label="彡 age 19-21",          value="1509590685106438226"),
@@ -147,7 +147,7 @@ class DM_StatusRoles(RoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_dm_status",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ DM STATUS",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ DM STATUS",
             options=[
                 discord.SelectOption(label="彡 dm‘s open",               value="1526108378991165460"),
                 discord.SelectOption(label="彡 dm‘s closed",             value="1526108432736981112"),
@@ -160,7 +160,7 @@ class InterestsRoles(MultiRoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_interests",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ INTERESTS",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ INTERESTS",
             options=[
                 discord.SelectOption(label="彡 music",                   value="1526108953820528751"),
                 discord.SelectOption(label="彡 food",                  value="1526108990017110117"),
@@ -185,7 +185,7 @@ class GamesRoles(MultiRoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_games",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ MY GAMES",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ MY GAMES",
             options=[
                 discord.SelectOption(label="彡 valo",                  value="1534258800083603466"),
                 discord.SelectOption(label="彡 roblox",                     value="1534258932514820307"),
@@ -210,7 +210,7 @@ class PingRoles(MultiRoleSelect):
     def __init__(self) -> None:
         super().__init__(
             custom_id="select_ping",
-            placeholder="ㅤㅤㅤ ࿐ ˖ ⊹ㅤㅤ PINGS",
+            placeholder="ㅤㅤㅤ ㅤ࿐ ˖ ⊹ㅤㅤ PINGS",
             options=[
                 discord.SelectOption(label="彡 member shouts",                              value="1509590685089796166"),
                 discord.SelectOption(label="彡 chat sanitäter",                          value="1509590685089796165"),
