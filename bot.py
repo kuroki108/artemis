@@ -19,8 +19,6 @@ intents.members = True
 bot = commands.Bot(
     command_prefix=".",
     intents=intents,
-    # Ohne Timeout würde discord.py bei Rate-Limits (z. B. Umbenennen) bis zu 10 Minuten still warten
-    max_ratelimit_timeout=30,
     activity=discord.CustomActivity(name="⟣ 🪽 lunaR palace ₊ ⊹")
 )
 
@@ -30,7 +28,6 @@ async def setup_hook():
     await bot.load_extension("modules.bump_reminder")
     await bot.load_extension("modules.verification")
     await bot.load_extension("modules.giveaway")
-    await bot.load_extension("modules.vc_master")
     await bot.load_extension("modules.selfroles")
     # Slash-Commands bei Discord registrieren, sonst tauchen sie nicht auf.
     synced = await bot.tree.sync()
