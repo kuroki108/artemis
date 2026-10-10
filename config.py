@@ -36,31 +36,3 @@ GIVEAWAY_BUTTON_EMOJI = "<:lunaRpalace:1532897908901285970>"
 GIVEAWAY_WINNER_EMOJI = "<a:lunaRpalace:1532899555715055616>"
 # Wie oft nach abgelaufenen Giveaways geschaut wird.
 GIVEAWAY_CHECK_SECONDS = 15
-
-
-# VoiceMaster (0 = nicht konfiguriert, Join-to-Create ist dann inaktiv)
-# Emoji im Titel des Interface-Embeds.
-VC_MASTER = "<a:lunaRpalace:1533125760884281355>"
-# Emojis auf den Buttons des Interfaces und vor den Einträgen im Embed (Custom-Emoji immer mit ID: "<:name:id>").
-VC_MASTER_LOCK_EMOJI = "<:lunaRpalace:1556771278742888508>"
-VC_MASTER_UNLOCK_EMOJI = "<:lunaRpalace:1557076954388373585>"
-VC_MASTER_DISCONNECT_EMOJI = "<:lunaRpalace:1556771392056467526>"
-VC_MASTER_LIMIT_EMOJI = "<:lunaRpalace:1556771437765992539>"
-VC_MASTER_RENAME_EMOJI = "<:lunaRpalace:1556771351438819379>"
-# Beitreten erstellt einen eigenen Sprachkanal.
-VC_MASTER_CREATE_CHANNEL_ID = 1557091821186977984
-
-VC_MASTER_CATEGORY_ID = 0
-
-VC_MASTER_ALWAYS_ROLE_IDS: list[int] = [1509590685140127830] #Management
-
-VC_MASTER_LOG_CHANNEL_ID = 1509590686209540106
-
-# Mindestabstand zwischen zwei neuen Kanälen pro Nutzer.
-VC_MASTER_COOLDOWN_SECONDS = 120
-# Leere Kanäle werden erst nach dieser Zeit gelöscht (wer zurückkommt, behält ihn).
-VC_MASTER_EMPTY_DELETE_SECONDS = 60
-# Intervall, in dem nach abgelaufenen leeren Kanälen gesucht wird.
-VC_MASTER_CHECK_SECONDS = 30
-# So lange behält ein Besitzer seinen Kanal, nachdem er ihn verlassen hat (z. B. kurzer Verbindungsabbruch), bevor ihn jemand anderes bekommt.
-VC_MASTER_OWNER_GRACE_SECONDS = 60
