@@ -21,6 +21,7 @@ Discord-Bot (discord.py 2.7) für den Server „lunaR palace“. Features: Zähl
 - `modules/verification.py` – Cog `Verification`: persistente View (`custom_id` fest) mit Button, der `VERIFIED_ROLE_ID` vergibt; `/verify-setup` (nur Admins) postet das Embed.
 - `modules/giveaway.py` – Cog `Giveaway`: `/giveaway start|beenden|reroll` (nur „Server verwalten“); persistenter `JoinButton` (`DynamicItem`, Giveaway-ID in der `custom_id`); `tasks.loop` lost fällige Giveaways aus, `mark_giveaway_ended` verhindert Doppel-Auslosung. Embed im Stil der Verifizierung, Texte in `WIN_MESSAGE` usw.; optionales Bild `assets/giveaway.gif`.
 - `modules/selfroles.py` – Cog `SelfRoles`: sechs persistente Select-Menüs (`RoleView01`: Über mich/Alter/DM-Status, `RoleView02`: Interessen/Spiele/Pings), Rollen-IDs direkt in den Optionen (`value`); Einzelauswahl wechselt/entfernt die Rolle, Mehrfachauswahl (`MultiRoleSelect`) schaltet jede gewählte Rolle um (vorhanden → entfernt, fehlt → vergeben), andere bleiben. `.selfrole-setup` (Prefix-Befehl, nur Admins) postet beide Nachrichten. `ABT ME` und `彡` in den Texten sind Absicht.
+- `modules/live_counter.py` – Cog `LiveCounter`: benennt `LIVE_COUNTER_CHANNEL_ID` in `CHANNEL_NAME` mit der Mitgliederzahl um; `tasks.loop` alle 5 min, nur bei Änderung (Discord-Limit: 2 Umbenennungen pro 10 min). Wird übersprungen, solange die ID `0` ist.
 - `data/counting_quotes.json` – Sprüche bei falscher Zahl (`wrong_number`).
 
 ## Konventionen
