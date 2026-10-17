@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ext import commands, tasks
 
-from config import LIVE_COUNTER_CHANNEL_ID
+from config import LIVE_COUNTER_CHANNEL_ID, LIVE_COUNTER_ROLE_ID
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +25,15 @@ class LiveCounter(commands.Cog):
         if channel is None:
             log.warning("Live-Counter-Kanal %s nicht gefunden", LIVE_COUNTER_CHANNEL_ID)
             return
-        name = CHANNEL_NAME.format(count=channel.guild.member_count)
+        if LIVE_COUNTER_ROLE_ID:
+            role = channel.guild.get_role(LIVE_COUNTER_ROLE_ID)
+            if role is None:
+                log.warning("Live-Counter-Rolle %s nicht gefunden", LIVE_COUNTER_ROLE_ID)
+                return
+            count = len(role.members)
+        else:
+            count = channel.guild.member_count
+        name = CHANNEL_NAME.format(count=count)
         if channel.name == name:
             return
         try:
