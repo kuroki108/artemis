@@ -1,7 +1,8 @@
+import json
 import sqlite3
 import time
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -255,4 +256,68 @@ def add_giveaway_winner(giveaway_id: int, user_id: int):
         connection.execute(
             "INSERT OR IGNORE INTO giveaway_winners VALUES (?, ?)",
             (giveaway_id, user_id),
+        )
+
+
+TEMPVOICE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS tempvoice_channels (
+    channel_id INTEGER PRIMARY KEY,
+    owner_id INTEGER NOT NULL,
+    locked INTEGER NOT NULL DEFAULT 0,
+    allowed TEXT NOT NULL DEFAULT '[]'
+)
+"""
+
+
+@dataclass(slots=True)
+class TempVoiceRecord:
+    """Aktiver temporärer Sprachkanal; allowed = User, die trotz Schließen beitreten dürfen."""
+    channel_id: int
+    owner_id: int
+    locked: bool = False
+    allowed: list[int] = field(default_factory=list)
+
+
+@contextmanager
+def _tempvoice_connection():
+    """Verbindung mit angelegter TempVoice-Tabelle; committet beim Verlassen."""
+    connection = sqlite3.connect(DATABASE_PATH)
+    try:
+        connection.execute(TEMPVOICE_SCHEMA)
+        with connection:
+            yield connection
+    finally:
+        connection.close()
+
+
+def load_tempvoice_channels() -> dict[int, TempVoiceRecord]:
+    with _tempvoice_connection() as connection:
+        rows = connection.execute(
+            "SELECT channel_id, owner_id, locked, allowed FROM tempvoice_channels"
+        ).fetchall()
+        return {
+            row[0]: TempVoiceRecord(row[0], row[1], bool(row[2]), json.loads(row[3]))
+            for row in rows
+        }
+
+
+def save_tempvoice_channel(record: TempVoiceRecord):
+    with _tempvoice_connection() as connection:
+        connection.execute(
+            """
+            INSERT INTO tempvoice_channels (channel_id, owner_id, locked, allowed)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(channel_id) DO UPDATE SET
+                owner_id = excluded.owner_id,
+                locked = excluded.locked,
+                allowed = excluded.allowed
+            """,
+            (record.channel_id, record.owner_id, record.locked, json.dumps(record.allowed)),
+        )
+
+
+def delete_tempvoice_channel(channel_id: int):
+    with _tempvoice_connection() as connection:
+        connection.execute(
+            "DELETE FROM tempvoice_channels WHERE channel_id = ?", (channel_id,)
         )
