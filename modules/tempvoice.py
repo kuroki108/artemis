@@ -65,17 +65,16 @@ def owner_overwrite() -> discord.PermissionOverwrite:
 def interface_message(guild: discord.Guild) -> dict[str, Any]:
     """Embed (und Bild, falls vorhanden) als Argumente für send(); ein File ist nur einmal sendbar."""
     creator_url = f"https://discord.com/channels/{guild.id}/{TEMPVOICE_CREATOR_CHANNEL_ID}"
-    arrow = TEMPVOICE_ARROW_EMOJI
     embed = discord.Embed(
         description=(
             f"# {TEMPVOICE_EMOJI} __VoiceMaster Interface__\n"
             f"<:b9_lunaRpalace:1536504134457499648> Klick [hier]({creator_url}) um einen VC zu erstellen.\n\n"
             # Reihenfolge wie die Buttons
-            f"{arrow} {TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
-            f"{arrow} {TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
-            f"{arrow} {TEMPVOICE_LIMIT_EMOJI} `change` user limit\n"
-            f"{arrow} {TEMPVOICE_RENAME_EMOJI} `rename` the voice channel\n"
-            f"{arrow} {TEMPVOICE_EMERGENCY_EMOJI} `emergency` alert the staff"
+            f"{TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
+            f"{TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
+            f"{TEMPVOICE_LIMIT_EMOJI} `change` user limit\n"
+            f"{TEMPVOICE_RENAME_EMOJI} `rename` the voice channel\n"
+            f"{TEMPVOICE_EMERGENCY_EMOJI} `emergency` alert the staff"
         ),
         color=discord.Color.light_embed(),
     )
