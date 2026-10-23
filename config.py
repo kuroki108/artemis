@@ -40,3 +40,28 @@ GIVEAWAY_CHECK_SECONDS = 15
 LIVE_COUNTER_CHANNEL_ID = 1560983965081276446
 # Rolle, deren Mitglieder gezählt werden (0 = alle Servermitglieder).
 LIVE_COUNTER_ROLE_ID = 1509590685106438234
+
+
+# TempVoice (Creator-Kanal 0 = nicht konfiguriert, Modul wird dann übersprungen)
+# Sprachkanal, dessen Betreten einen eigenen Kanal erstellt.
+TEMPVOICE_CREATOR_CHANNEL_ID = 1556053383511679016
+# Kategorie für neue Kanäle (0 = Kategorie des Creator-Kanals).
+TEMPVOICE_CATEGORY_ID = 1556053265353805907
+# Nutzerlimit neuer Kanäle (0 = unbegrenzt).
+TEMPVOICE_DEFAULT_LIMIT = 0
+# Notfall-Button: Rolle, die gepingt wird, und Kanal für die Meldungen.
+TEMPVOICE_STAFF_ROLE_ID = 1550585300974178356
+TEMPVOICE_ALERT_CHANNEL_ID = 1552772759564714016
+# Wartezeit, bevor derselbe User erneut einen Kanal erstellen kann (Sekunden).
+# Wer währenddessen im Creator-Kanal bleibt, bekommt den Kanal nach Ablauf.
+TEMPVOICE_CREATE_COOLDOWN = 15
+# Emoji im Titel des Interface-Embeds.
+TEMPVOICE_EMOJI = "<a:a_lunaRpalace:1533125760884281355>"
+# Emojis der Interface-Buttons (Custom-Emoji immer mit ID: "<:name:id>").
+TEMPVOICE_OPEN_EMOJI = "<:a_lunaRpalace:1557076954388373585>"
+TEMPVOICE_CLOSE_EMOJI = "<:a_lunaRpalace:1556771278742888508>"
+TEMPVOICE_RENAME_EMOJI = "<:a_lunaRpalace:1556771351438819379>"
+TEMPVOICE_LIMIT_EMOJI = "<:a_lunaRpalace:1541149690760921139>"
+TEMPVOICE_EMERGENCY_EMOJI = "<:a_lunaRpalace:1562223249083867226>"
+# Pfeil vor jeder Zeile der Button-Liste im Embed.
+TEMPVOICE_ARROW_EMOJI = "❯"
