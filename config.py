@@ -52,6 +52,8 @@ TEMPVOICE_DEFAULT_LIMIT = 0
 # Notfall-Button: Rolle, die gepingt wird, und Kanal für die Meldungen.
 TEMPVOICE_STAFF_ROLE_ID = 1550585300974178356
 TEMPVOICE_ALERT_CHANNEL_ID = 1552772759564714016
+# Textkanal, in den alle TempVoice-Ereignisse geloggt werden (0 = kein Log).
+TEMPVOICE_LOG_CHANNEL_ID = 1552772622436012196
 # Wartezeit, bevor derselbe User erneut einen Kanal erstellen kann (Sekunden).
 # Wer währenddessen im Creator-Kanal bleibt, bekommt den Kanal nach Ablauf.
 TEMPVOICE_CREATE_COOLDOWN = 15

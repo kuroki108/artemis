@@ -22,6 +22,7 @@ from config import (
     TEMPVOICE_EMERGENCY_EMOJI,
     TEMPVOICE_EMOJI,
     TEMPVOICE_LIMIT_EMOJI,
+    TEMPVOICE_LOG_CHANNEL_ID,
     TEMPVOICE_OPEN_EMOJI,
     TEMPVOICE_RENAME_EMOJI,
     TEMPVOICE_STAFF_ROLE_ID,
@@ -190,6 +191,8 @@ class TempVoice(commands.Cog):
         if not TEMPVOICE_STAFF_ROLE_ID or not TEMPVOICE_ALERT_CHANNEL_ID:
             log.warning("TEMPVOICE_STAFF_ROLE_ID/TEMPVOICE_ALERT_CHANNEL_ID sind nicht gesetzt, "
                         "der Notfall-Button funktioniert erst danach")
+        if not TEMPVOICE_LOG_CHANNEL_ID:
+            log.warning("TEMPVOICE_LOG_CHANNEL_ID ist nicht gesetzt, TempVoice-Ereignisse werden nicht geloggt")
         self.channels = load_tempvoice_channels()
         self.bot.add_view(self.view)
         self._startup_task = asyncio.create_task(self._startup_cleanup())
@@ -248,6 +251,18 @@ class TempVoice(commands.Cog):
         self.emergency_cooldowns.pop(channel_id, None)
         delete_tempvoice_channel(channel_id)
 
+    async def log_event(self, title: str, description: str) -> None:
+        """Schreibt ein Ereignis in den Log-Kanal; Fehler landen nur in der Konsole."""
+        channel = self.bot.get_channel(TEMPVOICE_LOG_CHANNEL_ID)
+        if not isinstance(channel, discord.TextChannel):
+            return
+        embed = discord.Embed(title=title, description=description,
+                              color=discord.Color.light_embed(), timestamp=discord.utils.utcnow())
+        try:
+            await channel.send(embed=embed)
+        except discord.HTTPException as e:
+            log.warning("TempVoice-Log konnte nicht gesendet werden: %s", e)
+
     # Kanal-Lebenszyklus
 
     async def create_temp(self, member: discord.Member, creator: discord.VoiceChannel) -> None:
@@ -280,50 +295,44 @@ class TempVoice(commands.Cog):
             data = TempVoiceRecord(channel.id, member.id)
             self.channels[channel.id] = data
             save_tempvoice_channel(data)
+            await self.log_event("Kanal erstellt", f"Kanal: {channel.mention} (`{channel.name}`)\n"
+                                                   f"Besitzer: {member.mention}")
 
             try:
                 await member.move_to(channel)
             except discord.HTTPException:
-                # Nutzer hat den Sprachchat in der Zwischenzeit verlassen
-                await self.delete_temp(channel)
-                return
-
-            try:
-                await channel.send(content=member.mention, view=self.view, **interface_message(guild))
-            except discord.HTTPException:
-                log.warning("Interface konnte nicht in %s gesendet werden", channel.id)
+                await self.delete_temp(channel, "Besitzer hat den Sprachchat vorher verlassen")
         except discord.HTTPException:
             log.exception("Temporärer Kanal für %s konnte nicht erstellt werden", member)
         finally:
             self.creating.discard(member.id)
 
-    async def delete_temp(self, channel: discord.VoiceChannel) -> None:
+    async def delete_temp(self, channel: discord.VoiceChannel, reason: str = "Kanal ist leer") -> None:
         self.forget(channel.id)
         try:
-            await channel.delete(reason="TempVoice: Kanal ist leer")
+            await channel.delete(reason=f"TempVoice: {reason}")
         except discord.NotFound:
             pass
         except discord.HTTPException:
             log.exception("Temporärer Kanal %s konnte nicht gelöscht werden", channel.id)
+            return
+        await self.log_event("Kanal gelöscht", f"Kanal: `{channel.name}`\nGrund: {reason}")
 
     async def transfer(self, channel: discord.VoiceChannel, data: TempVoiceRecord, new_owner: discord.Member) -> None:
-        old_owner = channel.guild.get_member(data.owner_id)
+        old_id = data.owner_id
+        old_owner = channel.guild.get_member(old_id)
         data.owner_id = new_owner.id
-        if data.locked and old_owner is not None:
-            # Der alte Besitzer darf in einen geschlossenen Kanal zurückkehren
-            data.allowed = list({*data.allowed, old_owner.id} - {new_owner.id})
         save_tempvoice_channel(data)
         try:
-            if not data.locked and old_owner is not None:
+            # Ohne seinen Overwrite kommt der alte Besitzer in einen geschlossenen Kanal nicht zurück
+            if old_owner is not None:
                 await channel.set_permissions(old_owner, overwrite=None, reason="TempVoice: Besitzerwechsel")
             await channel.set_permissions(new_owner, overwrite=owner_overwrite(), reason="TempVoice: Besitzerwechsel")
         except discord.HTTPException as e:
             # Besitz im Bot ist trotzdem übertragen, nur die Kanalrechte fehlen
             log.warning("Rechte beim Besitzerwechsel in %s nicht gesetzt: %s", channel.id, e)
-        try:
-            await channel.send(f"-# {new_owner.mention} ist jetzt Besitzer dieses Kanals.")
-        except discord.HTTPException:
-            pass
+        await self.log_event("Besitzer gewechselt", f"Kanal: {channel.mention}\n"
+                                                    f"Vorher: <@{old_id}>\nJetzt: {new_owner.mention}")
 
     async def _startup_cleanup(self) -> None:
         await self.bot.wait_until_ready()
@@ -368,6 +377,7 @@ class TempVoice(commands.Cog):
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel) -> None:
         if channel.id in self.channels:
             self.forget(channel.id)
+            await self.log_event("Kanal manuell gelöscht", f"Kanal: `{channel.name}`")
 
     # Aktionen
 
@@ -376,34 +386,19 @@ class TempVoice(commands.Cog):
         if data.locked == locked:
             return "Der Kanal ist bereits " + ("geschlossen." if locked else "offen.")
 
-        guild = channel.guild
-        overwrites = dict(channel.overwrites)
-        everyone = overwrites.get(guild.default_role, discord.PermissionOverwrite())
-        everyone.connect = False if locked else None
-        overwrites[guild.default_role] = everyone
-
-        if locked:
-            # Wer gerade im Kanal ist, darf auch nach dem Schließen zurückkehren
-            allowed = [m for m in channel.members if not m.bot and m.id != data.owner_id]
-            for target in allowed:
-                ow = overwrites.get(target, discord.PermissionOverwrite())
-                ow.connect = True
-                overwrites[target] = ow
-            data.allowed = [m.id for m in allowed]
-        else:
-            for target, ow in list(overwrites.items()):
-                if target.id in data.allowed:
-                    ow.connect = None
-                    if ow.is_empty():
-                        del overwrites[target]
-            data.allowed = []
-
-        await channel.edit(overwrites=overwrites, reason=f"TempVoice: {member} hat den Kanal "
-                                                         + ("geschlossen" if locked else "geöffnet"))
+        # "Verbinden" prüft Discord nur beim Beitreten: wer drin ist, bleibt, wer geht, kommt nicht
+        # wieder rein. Nur der Besitzer hat einen eigenen Overwrite, verliert ihn aber beim Rausgehen.
+        everyone = channel.guild.default_role
+        overwrite = channel.overwrites_for(everyone)
+        overwrite.connect = False if locked else None
+        await channel.set_permissions(everyone, overwrite=overwrite, reason=f"TempVoice: {member} hat den Kanal "
+                                      + ("geschlossen" if locked else "geöffnet"))
         data.locked = locked
         save_tempvoice_channel(data)
+        await self.log_event("Kanal geschlossen" if locked else "Kanal geöffnet",
+                             f"Kanal: {channel.mention}\nVon: {member.mention}")
         if locked:
-            return "Der Kanal ist jetzt geschlossen. Nur wer gerade drin ist, kann wieder beitreten."
+            return "Der Kanal ist jetzt geschlossen. Niemand kann mehr beitreten, auch nicht, wer ihn verlässt."
         return "Der Kanal ist jetzt offen. Jeder kann beitreten."
 
     async def rename(self, member: discord.Member, name: str) -> str:
@@ -417,12 +412,17 @@ class TempVoice(commands.Cog):
             raise TVError(f"Discord erlaubt nur {RENAME_LIMIT} Umbenennungen alle 10 Minuten. "
                           f"Versuche es <t:{retry}:R> erneut.")
         self.rename_history[channel.id].append(time.monotonic())
+        old_name = channel.name
         await channel.edit(name=new_name, reason=f"TempVoice: umbenannt von {member}")
+        await self.log_event("Kanal umbenannt", f"Kanal: {channel.mention}\nVorher: `{old_name}`\n"
+                                                f"Jetzt: `{new_name}`\nVon: {member.mention}")
         return f"Der Kanal heißt jetzt **{new_name}**."
 
     async def set_limit(self, member: discord.Member, limit: int) -> str:
         channel, _ = self.owned_temp(member)
         await channel.edit(user_limit=limit, reason=f"TempVoice: Limit geändert von {member}")
+        await self.log_event("Limit geändert", f"Kanal: {channel.mention}\nLimit: {limit or 'unbegrenzt'}\n"
+                                               f"Von: {member.mention}")
         return "Das Nutzerlimit wurde entfernt." if limit == 0 else f"Das Nutzerlimit ist jetzt **{limit}**."
 
     async def emergency(self, member: discord.Member, reason: str) -> str:
@@ -445,7 +445,7 @@ class TempVoice(commands.Cog):
         embed = discord.Embed(
             title="Notfall in einem Sprachkanal",
             description=reason.strip() or "*Kein Grund angegeben*",
-            color=discord.Color.red(),
+            color=discord.Color.light_embed(),
             timestamp=discord.utils.utcnow(),
         )
         embed.add_field(name="Kanal", value=f"{channel.mention} ({channel.name})", inline=False)
@@ -456,10 +456,12 @@ class TempVoice(commands.Cog):
         view = discord.ui.View()
         view.add_item(discord.ui.Button(label="Zum Kanal", url=channel.jump_url))
         try:
-            await alert_channel.send(content=role.mention, embed=embed, view=view)
+            alert = await alert_channel.send(content=role.mention, embed=embed, view=view)
         except discord.HTTPException:
             self.emergency_cooldowns.pop(channel.id, None)
             raise
+        await self.log_event("Notfall gemeldet", f"Kanal: {channel.mention}\nVon: {member.mention}\n"
+                                                 f"Grund: {embed.description}\n[Zur Meldung]({alert.jump_url})")
         return "Das Staff-Team wurde alarmiert und kümmert sich so schnell wie möglich darum."
 
     # Admin-Befehl
@@ -470,6 +472,7 @@ class TempVoice(commands.Cog):
     async def tempvoice_setup(self, ctx: commands.Context) -> None:
         """Postet das Interface in diesen Kanal."""
         await ctx.channel.send(view=self.view, **interface_message(ctx.guild))
+        await self.log_event("Interface gepostet", f"Kanal: {ctx.channel.mention}\nVon: {ctx.author.mention}")
         try:
             await ctx.message.delete()
         except discord.HTTPException:
