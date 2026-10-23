@@ -69,7 +69,7 @@ def interface_message(guild: discord.Guild) -> dict[str, Any]:
     embed = discord.Embed(
         description=(
             f"# {TEMPVOICE_EMOJI} __VoiceMaster Interface__\n"
-            f"╰ Klick [hier]({creator_url}) um einen VC zu erstellen.\n\n"
+            f"<:b9_lunaRpalace:1536504134457499648> Klick [hier]({creator_url}) um einen VC zu erstellen.\n\n"
             # Reihenfolge wie die Buttons
             f"{arrow} {TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
             f"{arrow} {TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
