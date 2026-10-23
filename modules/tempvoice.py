@@ -68,20 +68,16 @@ def interface_message(guild: discord.Guild) -> dict[str, Any]:
     embed = discord.Embed(
         description=(
             f"# {TEMPVOICE_EMOJI} __VoiceMaster Interface__\n"
-            f"╰ Klick [hier]({creator_url}) um einen VC zu erstellen."
+            f"╰ Klick [hier]({creator_url}) um einen VC zu erstellen.\n\n"
+            # Reihenfolge wie die Buttons
+            f"{arrow} {TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
+            f"{arrow} {TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
+            f"{arrow} {TEMPVOICE_LIMIT_EMOJI} `change` user limit\n"
+            f"{arrow} {TEMPVOICE_RENAME_EMOJI} `rename` the voice channel\n"
+            f"{arrow} {TEMPVOICE_EMERGENCY_EMOJI} `emergency` alert the staff"
         ),
         color=discord.Color.light_embed(),
     )
-    # Zwei Spalten in der Reihenfolge der Buttons; "\u200b" = unsichtbarer Feldname
-    embed.add_field(name="\u200b", value=(
-        f"{arrow} {TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
-        f"{arrow} {TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
-        f"{arrow} {TEMPVOICE_LIMIT_EMOJI} `change` user limit"
-    ))
-    embed.add_field(name="\u200b", value=(
-        f"{arrow} {TEMPVOICE_RENAME_EMOJI} `rename` the voice channel\n"
-        f"{arrow} {TEMPVOICE_EMERGENCY_EMOJI} `emergency` alert the staff"
-    ))
     embed.set_footer(text="Nutze die Buttons unten, um deinen Sprachkanal zu verwalten.")
     # Das Bild ist die Trennlinie über dem Footer
     if not BANNER_PATH.is_file():
