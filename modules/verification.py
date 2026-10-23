@@ -48,23 +48,26 @@ class VerifyView(discord.ui.View):
             await interaction.response.send_message("Du bist bereits verifiziert.", ephemeral=True)
             return
 
+        # Discord verlangt eine Antwort innerhalb von 3 s; die zwei Rollen-Aufrufe können länger
+        # dauern, sonst gibt es "404 Unknown interaction". Danach nur noch per followup antworten.
+        await interaction.response.defer(ephemeral=True)
         try:
             await member.add_roles(role)
             # remove_roles braucht ein Objekt mit .id, eine nackte int-ID crasht
             await member.remove_roles(discord.Object(id=UNVERIFIED_ROLE_ID))
         except discord.Forbidden:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "Ich darf dir die Rolle nicht geben (fehlende Rechte). Bitte melde dich beim Team.",
                 ephemeral=True,
             )
             return
         except discord.HTTPException:
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 "Da ist etwas schiefgelaufen. Versuch es gleich nochmal.", ephemeral=True
             )
             return
 
-        await interaction.response.send_message(
+        await interaction.followup.send(
             "Du bist jetzt verifiziert – viel Spaß auf dem Server!", ephemeral=True
         )
 
