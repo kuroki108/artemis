@@ -31,6 +31,7 @@ async def setup_hook():
     await bot.load_extension("modules.selfroles")
     await bot.load_extension("modules.live_counter")
     await bot.load_extension("modules.tempvoice")
+    await bot.load_extension("modules.onboarding")
     # Slash-Commands bei Discord registrieren, sonst tauchen sie nicht auf.
     synced = await bot.tree.sync()
     log.info("%d Slash-Command(s) synchronisiert", len(synced))
