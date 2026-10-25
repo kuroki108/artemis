@@ -58,7 +58,7 @@ TEMPVOICE_LOG_CHANNEL_ID = 1552772622436012196
 # Wer währenddessen im Creator-Kanal bleibt, bekommt den Kanal nach Ablauf.
 TEMPVOICE_CREATE_COOLDOWN = 15
 # Emoji im Titel des Interface-Embeds.
-TEMPVOICE_EMOJI = "<a:a_lunaRpalace:1533125760884281355>"
+TEMPVOICE_EMOJI = "<:a_lunaRpalace:1563664474605490247>"
 # Emojis der Interface-Buttons (Custom-Emoji immer mit ID: "<:name:id>").
 TEMPVOICE_OPEN_EMOJI = "<:a_lunaRpalace:1557076954388373585>"
 TEMPVOICE_CLOSE_EMOJI = "<:a_lunaRpalace:1556771278742888508>"
@@ -66,4 +66,4 @@ TEMPVOICE_RENAME_EMOJI = "<:a_lunaRpalace:1556771351438819379>"
 TEMPVOICE_LIMIT_EMOJI = "<:a_lunaRpalace:1541149690760921139>"
 TEMPVOICE_EMERGENCY_EMOJI = "<:a_lunaRpalace:1562223249083867226>"
 # Pfeil vor jeder Zeile der Button-Liste im Embed.
-TEMPVOICE_ARROW_EMOJI = "❯"
+
