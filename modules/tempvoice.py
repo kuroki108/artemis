@@ -13,7 +13,6 @@ from discord.ext import commands
 
 from config import (
     TEMPVOICE_ALERT_CHANNEL_ID,
-    TEMPVOICE_ARROW_EMOJI,
     TEMPVOICE_CATEGORY_ID,
     TEMPVOICE_CLOSE_EMOJI,
     TEMPVOICE_CREATE_COOLDOWN,
@@ -63,13 +62,11 @@ def owner_overwrite() -> discord.PermissionOverwrite:
 
 
 def interface_message(guild: discord.Guild) -> dict[str, Any]:
-    """Embed (und Bild, falls vorhanden) als Argumente für send(); ein File ist nur einmal sendbar."""
     creator_url = f"https://discord.com/channels/{guild.id}/{TEMPVOICE_CREATOR_CHANNEL_ID}"
     embed = discord.Embed(
         description=(
             f"# {TEMPVOICE_EMOJI} __VoiceMaster Interface__\n"
             f"<:b9_lunaRpalace:1536504134457499648> Klick [hier]({creator_url}) um einen VC zu erstellen.\n\n"
-            # Reihenfolge wie die Buttons
             f"{TEMPVOICE_CLOSE_EMOJI} `lock` the voice channel\n"
             f"{TEMPVOICE_OPEN_EMOJI} `unlock` the voice channel\n"
             f"{TEMPVOICE_LIMIT_EMOJI} `change` user limit\n"
@@ -137,17 +134,13 @@ class EmergencyModal(discord.ui.Modal, title="Staff-Team alarmieren"):
 
 
 class InterfaceView(discord.ui.View):
-    """Persistentes Interface – funktioniert auch nach einem Neustart des Bots.
-
-    Nur Emojis, keine Labels; alle 5 Buttons in einer Reihe, Notfall ganz rechts.
-    """
 
     def __init__(self, cog: TempVoice) -> None:
         super().__init__(timeout=None)
         self.cog = cog
 
     @discord.ui.button(emoji=TEMPVOICE_CLOSE_EMOJI, style=discord.ButtonStyle.secondary,
-                       custom_id="tempvoice:close")
+                        custom_id="tempvoice:close")
     async def close(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
         await self.cog.respond(interaction, self.cog.set_locked(interaction.user, True))
 
