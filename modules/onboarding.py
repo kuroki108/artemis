@@ -31,10 +31,11 @@ class Onboarding(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         embed = discord.Embed(
-            author={member.name},
             description=LEAVE_MESSAGE,
             timestamp=discord.utils.utcnow(),
         )
+        # Embed() kennt kein author=, der Autor geht nur über set_author()
+        embed.set_author(name=member.name)
         embed.set_thumbnail(url=member.display_avatar.url)
         icon = member.guild.icon
         embed.set_footer(text=LEAVE_FOOTER, icon_url=icon.url if icon else None)
