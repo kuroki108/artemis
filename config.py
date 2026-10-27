@@ -30,13 +30,13 @@ UNVERIFIED_ROLE_ID = 1525983635897978981
 # Onboarding
 # Rollen, die neue Mitglieder beim Beitritt automatisch bekommen (leer = keine).
 # Die Unverifiziert-Rolle wird beim Verifizieren wieder entfernt.
-ONBOARDING_ROLE_IDS = [UNVERIFIED_ROLE_ID]
+ONBOARDING_ROLE_IDS = [1525983635897978981, 1509590685106438234, 1518357044510593094, 1526112303987298424, 1534258287707685136, 1509590685098180718]
 # Kanal für Willkommensnachrichten (0 = keine Willkommensnachricht).
-WELCOME_CHANNEL_ID = 0
+WELCOME_CHANNEL_ID = 1509590686704603272
 # Emoji am Ende der Willkommensnachricht (Custom-Emoji immer mit ID: "<:name:id>").
 WELCOME_EMOJI = "<a:a_lunaRpalace:1532899415252009231>"
 # Kanal für Abschiedsnachrichten (0 = keine; Standard: der Willkommenskanal).
-LEAVE_CHANNEL_ID = 0
+LEAVE_CHANNEL_ID = 1509590685542776894
 
 
 # Giveaway
