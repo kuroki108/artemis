@@ -56,16 +56,16 @@ LIVE_COUNTER_ROLE_ID = 1509590685106438234
 
 # TempVoice (Creator-Kanal 0 = nicht konfiguriert, Modul wird dann übersprungen)
 # Sprachkanal, dessen Betreten einen eigenen Kanal erstellt.
-TEMPVOICE_CREATOR_CHANNEL_ID = 1556053383511679016
+TEMPVOICE_CREATOR_CHANNEL_ID = 1564694187201405028
 # Kategorie für neue Kanäle (0 = Kategorie des Creator-Kanals).
-TEMPVOICE_CATEGORY_ID = 1556053265353805907
+TEMPVOICE_CATEGORY_ID = 1564693999049113641
 # Nutzerlimit neuer Kanäle (0 = unbegrenzt).
 TEMPVOICE_DEFAULT_LIMIT = 0
 # Notfall-Button: Rolle, die gepingt wird, und Kanal für die Meldungen.
-TEMPVOICE_STAFF_ROLE_ID = 1550585300974178356
-TEMPVOICE_ALERT_CHANNEL_ID = 1552772759564714016
+TEMPVOICE_STAFF_ROLE_ID = 1509590685131604067
+TEMPVOICE_ALERT_CHANNEL_ID = 1509590686012539021
 # Textkanal, in den alle TempVoice-Ereignisse geloggt werden (0 = kein Log).
-TEMPVOICE_LOG_CHANNEL_ID = 1552772622436012196
+TEMPVOICE_LOG_CHANNEL_ID = 1509590686209540106
 # Wartezeit, bevor derselbe User erneut einen Kanal erstellen kann (Sekunden).
 # Wer währenddessen im Creator-Kanal bleibt, bekommt den Kanal nach Ablauf.
 TEMPVOICE_CREATE_COOLDOWN = 15
