@@ -1,0 +1,38 @@
+ARTEMIS – BEFEHLE
+=================
+
+Slash-Commands (/)
+------------------
+/verify-setup
+    Postet das Verifizierungs-Embed mit Button in den aktuellen Kanal.
+    Rechte: Administrator
+
+/giveaway start <preis> <dauer> [nur_booster]
+    Startet ein neues Giveaway im aktuellen Kanal.
+    preis        – was verlost wird (1–200 Zeichen)
+    dauer        – z. B. 30m, 2h, 1d12h (1 Minute bis 30 Tage)
+    nur_booster  – nur Server-Booster dürfen teilnehmen (Standard: nein)
+    Rechte: Server verwalten
+
+/giveaway stop <giveaway>
+    Lost ein laufendes Giveaway sofort aus (Auswahl per Autovervollständigung).
+    Rechte: Server verwalten
+
+/giveaway reroll <giveaway>
+    Zieht einen neuen Gewinner für ein beendetes Giveaway.
+    Rechte: Server verwalten
+
+
+Prefix-Commands (.)
+-------------------
+.selfrole-setup
+    Postet die beiden Selfrole-Nachrichten mit den Select-Menüs.
+    Rechte: Administrator
+
+.tempvoice-setup
+    Postet das TempVoice-Interface in den aktuellen Kanal.
+    Rechte: Administrator
+
+.help
+    Standard-Hilfe von discord.py (listet die Prefix-Commands).
+    Rechte: alle
