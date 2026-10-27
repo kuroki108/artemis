@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import discord
@@ -7,6 +8,8 @@ from discord import app_commands
 from discord.ext import commands
 
 from config import VERIFIED_ROLE_ID, UNVERIFIED_ROLE_ID
+
+log = logging.getLogger(__name__)
 
 # Über __file__ aufgelöst, damit der Pfad unabhängig vom CWD stimmt
 VERIFY_GIF_PATH = Path(__file__).resolve().parent.parent / "assets" / "gif.gif"
@@ -79,6 +82,29 @@ class Verification(commands.Cog):
     async def cog_load(self) -> None:
         # Registriert die View beim Start, damit alte Buttons weiter reagieren
         self.bot.add_view(VerifyView())
+
+    @commands.Cog.listener()
+    async def on_audit_log_entry_create(self, entry: discord.AuditLogEntry) -> None:
+        # Verifiziert wird nur über den Button. Andere Bots (z. B. bleed, das beim Wiederbeitritt
+        # gespeicherte Rollen zurückgibt) dürfen die Rolle nicht vergeben; das Team per Hand schon.
+        if entry.action is not discord.AuditLogAction.member_role_update:
+            return
+        if entry.user is None or not entry.user.bot or entry.user_id == self.bot.user.id:
+            return
+        if not any(role.id == VERIFIED_ROLE_ID for role in getattr(entry.after, "roles", [])):
+            return
+        member = entry.target
+        if not isinstance(member, discord.Member):
+            return
+
+        try:
+            await member.remove_roles(discord.Object(id=VERIFIED_ROLE_ID),
+                                      reason=f"Verifizierung nur per Button (vergeben von {entry.user})")
+            await member.add_roles(discord.Object(id=UNVERIFIED_ROLE_ID), reason="Verifizierung zurückgesetzt")
+        except discord.HTTPException as e:
+            log.warning("Verifiziert-Rolle von %s konnte nicht entfernt werden: %s", member, e)
+            return
+        log.info("Verifiziert-Rolle von %s entfernt, vergeben von %s", member, entry.user)
 
     @app_commands.command(name="verify-setup", description="Postet das Verifizierungs-Embed in diesen Channel.")
     @app_commands.guild_only()
