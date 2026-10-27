@@ -31,7 +31,7 @@ class Onboarding(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         embed = discord.Embed(
-            author=member.name,
+            author={member.name},
             description=LEAVE_MESSAGE,
             timestamp=discord.utils.utcnow(),
         )
