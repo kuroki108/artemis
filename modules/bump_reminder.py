@@ -17,13 +17,11 @@ BUMP_TEXTS = ("bump erfolgreich!", "bump done")
 # "_ _" ergibt die leere Zeile über beiden Nachrichten.
 # Dank an den Bumper; {user} wird zur Erwähnung, {due} zum Unix-Timestamp des nächsten Bumps.
 THANKS_MESSAGE = (
-    "_ _\n"
     "**that’s it for now {user} ! <a:a_lunaRpalace:1532899555715055616>**\n"
     "catch u on the next one <t:{due}:R> (ᴗ͈ˬᴗ͈)ഒ"
 )
 # Erinnerung nach Ablauf; {role} wird zur Ping-Rolle, {user} zum letzten Bumper.
 REMINDER_MESSAGE = (
-    "_ _\n"
     "-# ||<@&{role}>||\n"
     "**heyy {user}, could u give the server a little </bump:947088344167366698> ? "
     "<a:a_lunaRpalace:1532899268128542911>**"
