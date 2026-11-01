@@ -14,10 +14,19 @@ log = logging.getLogger(__name__)
 
 BUMP_TEXTS = ("bump erfolgreich!", "bump done")
 
+# "_ _" ergibt die leere Zeile über beiden Nachrichten.
 # Dank an den Bumper; {user} wird zur Erwähnung, {due} zum Unix-Timestamp des nächsten Bumps.
 THANKS_MESSAGE = (
-    "**tysm  ,  {user}**  <a:lunaRpalace:1532899555715055616>\n"
-    "**next bump in  <t:{due}:R>  (ᴗ͈ˬᴗ͈)ഒ**"
+    "_ _\n"
+    "**that’s it for now {user} ! <a:a_lunaRpalace:1532899555715055616>**\n"
+    "catch u on the next one <t:{due}:R> (ᴗ͈ˬᴗ͈)ഒ"
+)
+# Erinnerung nach Ablauf; {role} wird zur Ping-Rolle, {user} zum letzten Bumper.
+REMINDER_MESSAGE = (
+    "_ _\n"
+    "-# ||<@&{role}>||\n"
+    "**heyy {user}, could u give the server a little </bump:947088344167366698> ? "
+    "<a:a_lunaRpalace:1532899268128542911>**"
 )
 
 STATE_FILE = Path(__file__).resolve().parent.parent / "data" / "reminders.json"
@@ -70,9 +79,7 @@ class BumpReminder(commands.Cog):
             # Ohne bekannten Bumper (alter Timer-Stand) bleibt nur die Anrede
             user = f"<@{user_id}>" if user_id else "there"
             await channel.send(
-                f"-# ||<@&{BUMP_PING_ROLE_ID}>||\n"
-                f"**hii  {user}  ,  can  u  </bump:947088344167366698>  the  server  ?  **"
-                "<a:lunaRpalace:1532899201590235347>",
+                REMINDER_MESSAGE.format(role=BUMP_PING_ROLE_ID, user=user),
                 allowed_mentions=discord.AllowedMentions(roles=True, users=True),
             )
         except discord.HTTPException as e:
