@@ -48,6 +48,16 @@ RENAME_WINDOW = 600
 # Wie oft pro Kanal das Staff-Team alarmiert werden kann (Sekunden)
 EMERGENCY_COOLDOWN = 300
 
+# Geloggte Statusänderungen im Kanal: (Attribut des VoiceState, Titel bei an, Titel bei aus)
+VOICE_STATE_EVENTS = (
+    ("self_mute", "Mikrofon stummgeschaltet", "Mikrofon eingeschaltet"),
+    ("self_deaf", "Ton ausgeschaltet", "Ton eingeschaltet"),
+    ("mute", "Server-stummgeschaltet", "Server-Stummschaltung aufgehoben"),
+    ("deaf", "Server-Ton ausgeschaltet", "Server-Ton eingeschaltet"),
+    ("self_stream", "Stream gestartet", "Stream beendet"),
+    ("self_video", "Kamera eingeschaltet", "Kamera ausgeschaltet"),
+)
+
 
 class TVError(Exception):
     """Fehler, dessen Nachricht direkt an den Nutzer geht."""
@@ -55,6 +65,17 @@ class TVError(Exception):
 
 def default_name(member: discord.Member) -> str:
     return CHANNEL_NAME.format(name=member.name)
+
+
+def voice_changes(before: discord.VoiceState, after: discord.VoiceState) -> list[str]:
+    changes = []
+    for attr, on, off in VOICE_STATE_EVENTS:
+        # Ton aus/an schaltet das Mikrofon automatisch mit, das wäre sonst ein zweiter Eintrag
+        if attr == "self_mute" and before.self_deaf != after.self_deaf:
+            continue
+        if getattr(before, attr) != getattr(after, attr):
+            changes.append(on if getattr(after, attr) else off)
+    return changes
 
 
 def owner_overwrite() -> discord.PermissionOverwrite:
@@ -177,7 +198,9 @@ class TempVoice(commands.Cog):
         self.emergency_cooldowns: dict[int, float] = {}
         self.last_created: dict[int, float] = {}  # User-ID -> Zeitpunkt der letzten Kanal-Erstellung
         self.creating: set[int] = set()
+        self.log_queue: asyncio.Queue[discord.Embed] = asyncio.Queue()
         self._startup_task: asyncio.Task[None] | None = None
+        self._log_task: asyncio.Task[None] | None = None
 
     async def cog_load(self) -> None:
         if not TEMPVOICE_STAFF_ROLE_ID or not TEMPVOICE_ALERT_CHANNEL_ID:
@@ -188,11 +211,13 @@ class TempVoice(commands.Cog):
         self.channels = load_tempvoice_channels()
         self.bot.add_view(self.view)
         self._startup_task = asyncio.create_task(self._startup_cleanup())
+        self._log_task = asyncio.create_task(self._log_worker())
 
     async def cog_unload(self) -> None:
         self.view.stop()
-        if self._startup_task:
-            self._startup_task.cancel()
+        for task in (self._startup_task, self._log_task):
+            if task:
+                task.cancel()
 
     # Hilfsfunktionen
 
@@ -243,17 +268,28 @@ class TempVoice(commands.Cog):
         self.emergency_cooldowns.pop(channel_id, None)
         delete_tempvoice_channel(channel_id)
 
-    async def log_event(self, title: str, description: str) -> None:
-        """Schreibt ein Ereignis in den Log-Kanal; Fehler landen nur in der Konsole."""
-        channel = self.bot.get_channel(TEMPVOICE_LOG_CHANNEL_ID)
-        if not isinstance(channel, discord.TextChannel):
-            return
-        embed = discord.Embed(title=title, description=description,
-                              color=discord.Color.light_embed(), timestamp=discord.utils.utcnow())
-        try:
-            await channel.send(embed=embed)
-        except discord.HTTPException as e:
-            log.warning("TempVoice-Log konnte nicht gesendet werden: %s", e)
+    def log_event(self, title: str, description: str) -> None:
+        """Reiht ein Ereignis für den Log-Kanal ein, damit Aktionen nie auf das Rate-Limit warten."""
+        if TEMPVOICE_LOG_CHANNEL_ID:
+            self.log_queue.put_nowait(discord.Embed(title=title, description=description,
+                                                    color=discord.Color.light_embed(),
+                                                    timestamp=discord.utils.utcnow()))
+
+    async def _log_worker(self) -> None:
+        """Sendet die Logs der Reihe nach; Fehler landen nur in der Konsole."""
+        await self.bot.wait_until_ready()
+        while True:
+            embed = await self.log_queue.get()
+            channel = self.bot.get_channel(TEMPVOICE_LOG_CHANNEL_ID)
+            if not isinstance(channel, discord.TextChannel):
+                continue
+            try:
+                await channel.send(embed=embed)
+            except discord.HTTPException as e:
+                log.warning("TempVoice-Log konnte nicht gesendet werden: %s", e)
+            except Exception:
+                # Der Worker muss weiterlaufen, sonst bleiben alle weiteren Logs aus
+                log.exception("TempVoice-Log konnte nicht gesendet werden")
 
     # Kanal-Lebenszyklus
 
@@ -287,8 +323,8 @@ class TempVoice(commands.Cog):
             data = TempVoiceRecord(channel.id, member.id)
             self.channels[channel.id] = data
             save_tempvoice_channel(data)
-            await self.log_event("Kanal erstellt", f"Kanal: {channel.mention} (`{channel.name}`)\n"
-                                                   f"Besitzer: {member.mention}")
+            self.log_event("Kanal erstellt", f"Kanal: {channel.mention} (`{channel.name}`)\n"
+                                             f"Besitzer: {member.mention}")
 
             try:
                 await member.move_to(channel)
@@ -308,7 +344,7 @@ class TempVoice(commands.Cog):
         except discord.HTTPException:
             log.exception("Temporärer Kanal %s konnte nicht gelöscht werden", channel.id)
             return
-        await self.log_event("Kanal gelöscht", f"Kanal: `{channel.name}`\nGrund: {reason}")
+        self.log_event("Kanal gelöscht", f"Kanal: `{channel.name}`\nGrund: {reason}")
 
     async def transfer(self, channel: discord.VoiceChannel, data: TempVoiceRecord, new_owner: discord.Member) -> None:
         old_id = data.owner_id
@@ -323,8 +359,8 @@ class TempVoice(commands.Cog):
         except discord.HTTPException as e:
             # Besitz im Bot ist trotzdem übertragen, nur die Kanalrechte fehlen
             log.warning("Rechte beim Besitzerwechsel in %s nicht gesetzt: %s", channel.id, e)
-        await self.log_event("Besitzer gewechselt", f"Kanal: {channel.mention}\n"
-                                                    f"Vorher: <@{old_id}>\nJetzt: {new_owner.mention}")
+        self.log_event("Besitzer gewechselt", f"Kanal: {channel.mention}\n"
+                                              f"Vorher: <@{old_id}>\nJetzt: {new_owner.mention}")
 
     async def _startup_cleanup(self) -> None:
         await self.bot.wait_until_ready()
@@ -352,14 +388,25 @@ class TempVoice(commands.Cog):
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
                                     after: discord.VoiceState) -> None:
         if before.channel == after.channel:
+            # Mute, Ton, Stream, Kamera
+            if (isinstance(after.channel, discord.VoiceChannel) and after.channel.id in self.channels
+                    and (changes := voice_changes(before, after))):
+                self.log_event(", ".join(changes), f"Kanal: {after.channel.mention} (`{after.channel.name}`)\n"
+                                                   f"Nutzer: {member.mention}")
             return
 
         if isinstance(before.channel, discord.VoiceChannel) and (data := self.channels.get(before.channel.id)):
+            self.log_event("Kanal verlassen", f"Kanal: {before.channel.mention} (`{before.channel.name}`)\n"
+                                              f"Nutzer: {member.mention}")
             humans = [m for m in before.channel.members if not m.bot]
             if not humans:
                 await self.delete_temp(before.channel)
             elif data.owner_id == member.id:
                 await self.transfer(before.channel, data, humans[0])
+
+        if isinstance(after.channel, discord.VoiceChannel) and after.channel.id in self.channels:
+            self.log_event("Kanal betreten", f"Kanal: {after.channel.mention} (`{after.channel.name}`)\n"
+                                             f"Nutzer: {member.mention}")
 
         if (not member.bot and isinstance(after.channel, discord.VoiceChannel)
                 and after.channel.id == TEMPVOICE_CREATOR_CHANNEL_ID):
@@ -369,7 +416,7 @@ class TempVoice(commands.Cog):
     async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel) -> None:
         if channel.id in self.channels:
             self.forget(channel.id)
-            await self.log_event("Kanal manuell gelöscht", f"Kanal: `{channel.name}`")
+            self.log_event("Kanal manuell gelöscht", f"Kanal: `{channel.name}`")
 
     # Aktionen
 
@@ -387,8 +434,8 @@ class TempVoice(commands.Cog):
                                       + ("geschlossen" if locked else "geöffnet"))
         data.locked = locked
         save_tempvoice_channel(data)
-        await self.log_event("Kanal geschlossen" if locked else "Kanal geöffnet",
-                             f"Kanal: {channel.mention}\nVon: {member.mention}")
+        self.log_event("Kanal geschlossen" if locked else "Kanal geöffnet",
+                       f"Kanal: {channel.mention}\nVon: {member.mention}")
         if locked:
             return "Der Kanal ist jetzt geschlossen. Niemand kann mehr beitreten, auch nicht, wer ihn verlässt."
         return "Der Kanal ist jetzt offen. Jeder kann beitreten."
@@ -406,15 +453,15 @@ class TempVoice(commands.Cog):
         self.rename_history[channel.id].append(time.monotonic())
         old_name = channel.name
         await channel.edit(name=new_name, reason=f"TempVoice: umbenannt von {member}")
-        await self.log_event("Kanal umbenannt", f"Kanal: {channel.mention}\nVorher: `{old_name}`\n"
-                                                f"Jetzt: `{new_name}`\nVon: {member.mention}")
+        self.log_event("Kanal umbenannt", f"Kanal: {channel.mention}\nVorher: `{old_name}`\n"
+                                          f"Jetzt: `{new_name}`\nVon: {member.mention}")
         return f"Der Kanal heißt jetzt **{new_name}**."
 
     async def set_limit(self, member: discord.Member, limit: int) -> str:
         channel, _ = self.owned_temp(member)
         await channel.edit(user_limit=limit, reason=f"TempVoice: Limit geändert von {member}")
-        await self.log_event("Limit geändert", f"Kanal: {channel.mention}\nLimit: {limit or 'unbegrenzt'}\n"
-                                               f"Von: {member.mention}")
+        self.log_event("Limit geändert", f"Kanal: {channel.mention}\nLimit: {limit or 'unbegrenzt'}\n"
+                                         f"Von: {member.mention}")
         return "Das Nutzerlimit wurde entfernt." if limit == 0 else f"Das Nutzerlimit ist jetzt **{limit}**."
 
     async def emergency(self, member: discord.Member, reason: str) -> str:
@@ -452,8 +499,8 @@ class TempVoice(commands.Cog):
         except discord.HTTPException:
             self.emergency_cooldowns.pop(channel.id, None)
             raise
-        await self.log_event("Notfall gemeldet", f"Kanal: {channel.mention}\nVon: {member.mention}\n"
-                                                 f"Grund: {embed.description}\n[Zur Meldung]({alert.jump_url})")
+        self.log_event("Notfall gemeldet", f"Kanal: {channel.mention}\nVon: {member.mention}\n"
+                                           f"Grund: {embed.description}\n[Zur Meldung]({alert.jump_url})")
         return "Das Staff-Team wurde alarmiert und kümmert sich so schnell wie möglich darum."
 
     # Admin-Befehl
@@ -464,7 +511,7 @@ class TempVoice(commands.Cog):
     async def tempvoice_setup(self, ctx: commands.Context) -> None:
         """Postet das Interface in diesen Kanal."""
         await ctx.channel.send(view=self.view, **interface_message(ctx.guild))
-        await self.log_event("Interface gepostet", f"Kanal: {ctx.channel.mention}\nVon: {ctx.author.mention}")
+        self.log_event("Interface gepostet", f"Kanal: {ctx.channel.mention}\nVon: {ctx.author.mention}")
         try:
             await ctx.message.delete()
         except discord.HTTPException:
