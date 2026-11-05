@@ -19,7 +19,7 @@ intents.members = True
 bot = commands.Bot(
     command_prefix=".",
     intents=intents,
-    activity=discord.CustomActivity(name="…under the same palace ⊹")
+    activity=discord.CustomActivity(name="… under the same palace ⊹")
 )
 
 
