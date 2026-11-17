@@ -51,3 +51,4 @@ if __name__ == "__main__":
 
     # root_logger=True: auch die Logs der Module landen in der Konsole.
     bot.run(TOKEN, root_logger=True)
+
