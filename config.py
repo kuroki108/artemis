@@ -79,3 +79,8 @@ TEMPVOICE_LIMIT_EMOJI = "<:a_lunaRpalace:1541149690760921139>"
 TEMPVOICE_EMERGENCY_EMOJI = "<:a_lunaRpalace:1562223249083867226>"
 # Pfeil vor jeder Zeile der Button-Liste im Embed.
 
+
+
+# Voice-Presence (0 = nicht konfiguriert, Modul wird dann übersprungen)
+# Sprachkanal, in dem der Bot dauerhaft sitzt.
+VOICE_PRESENCE_CHANNEL_ID = 1554167406568669236
