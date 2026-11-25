@@ -36,8 +36,7 @@ class VoicePresence(commands.Cog):
         vc = channel.guild.voice_client
         try:
             if vc is None:
-                # self_deaf: der Bot hört nichts mit, spart Bandbreite.
-                await channel.connect(self_deaf=True)
+                await channel.connect()
                 log.info("Sprachkanal %s betreten", channel.name)
             elif vc.channel != channel:
                 await vc.move_to(channel)
